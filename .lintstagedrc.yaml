@@ -1,6 +1,7 @@
 "**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}":
   - "prettier --write"
   - "oxlint --type-aware --fix"
+  - "eslint --fix"
 
 "**/*.{json,yaml,md,css,html}":
   - "prettier --write"
