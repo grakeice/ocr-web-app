@@ -16,67 +16,64 @@ interface OCRProps {
 }
 
 export function OCR({ source }: OCRProps): JSX.Element {
-	const scheduler = createScheduler();
+	const scheduler = useRef(createScheduler());
+	const isPending = useRef(true);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [text, setText] = useState("");
-	const [isPending, setIsPending] = useState(true);
 
-	const getVideoSize = useRef(() => {
-		if (source.current) {
-			return {
-				width: source.current.videoWidth,
-				height: source.current.videoHeight,
-			};
-		} else {
-			return {
-				width: 0,
-				height: 0,
-			};
+	const doOCR = useEffectEvent(async () => {
+		const canvas = canvasRef.current;
+
+		if (source.current && !isPending.current && canvas) {
+			canvas.width = source.current.videoWidth;
+			canvas.height = source.current.videoHeight;
+			canvas
+				.getContext("2d")
+				?.drawImage(
+					source.current,
+					0,
+					0,
+					source.current.videoWidth,
+					source.current.videoHeight,
+				);
+			const { data } = await scheduler.current.addJob(
+				"recognize",
+				canvas,
+			);
+			setText(data.text);
 		}
 	});
 
-	const doOCR = useEffectEvent(
-		async ({ width, height }: { width: number; height: number }) => {
-			if (source.current && !isPending) {
-				const canvas = document.createElement("canvas");
-				canvas.width = width;
-				canvas.height = height;
-				canvas
-					.getContext("2d")
-					?.drawImage(source.current, 0, 0, width, height);
-				const {
-					data: { text },
-				} = await scheduler.addJob("recognize", canvas);
-				setText(text);
-			}
-		},
-	);
-
-	const [initialized, setInitialized] = useState(false);
-	const initialize = async () => {
-		for (const _ of [...Array(4).keys()]) {
-			const worker = await createWorker(
-				"jpn",
-				OEM.TESSERACT_LSTM_COMBINED,
-			);
-			scheduler.addWorker(worker);
-			console.log("worker added");
-		}
-		setIsPending(false);
-	};
-	if (!initialized) {
-		initialize();
-		setInitialized(true);
-	}
-
 	useEffect(() => {
-		const timer = setInterval(() => doOCR(getVideoSize.current()), 1000);
+		const _scheduler = scheduler.current;
+
+		const canvas = document.createElement("canvas");
+		canvasRef.current = canvas;
+
+		(async () => {
+			const workers = [...Array(4).keys()].map(() =>
+				createWorker("jpn", OEM.TESSERACT_LSTM_COMBINED),
+			);
+
+			for (const worker of await Promise.all(workers)) {
+				console.log("worker added");
+				_scheduler.addWorker(worker);
+			}
+
+			isPending.current = false;
+		})();
+
+		const timer = setInterval(() => doOCR(), 1000);
+
 		return () => {
-			setInitialized(false);
-			setIsPending(true);
-			scheduler.terminate();
-			clearInterval(timer);
+			(async () => {
+				clearInterval(timer);
+				isPending.current = true;
+				canvasRef.current = null;
+				await _scheduler.terminate();
+			})();
 		};
-	}, [scheduler]);
+	}, []);
 
 	return <>{text}</>;
 }

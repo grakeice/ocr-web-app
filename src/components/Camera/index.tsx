@@ -4,7 +4,7 @@ import {
 	useEffect,
 	useImperativeHandle,
 	useRef,
-	type ComponentPropsWithRef,
+	type ComponentPropsWithoutRef,
 	type JSX,
 	type RefObject,
 } from "react";
@@ -35,8 +35,8 @@ export function Camera({
 	cameraOptions,
 	videoRef,
 	...props
-}: CameraProps & Omit<ComponentPropsWithRef<"video">, "ref">): JSX.Element {
-	const innerRef = useRef<HTMLVideoElement | null>(null);
+}: CameraProps & ComponentPropsWithoutRef<"video">): JSX.Element {
+	const innerRef = useRef<HTMLVideoElement>(null);
 	const cameraRef = videoRef ?? innerRef;
 	const { stream, request, isPending } = useCamera(cameraOptions);
 
@@ -50,6 +50,7 @@ export function Camera({
 		};
 	});
 
+	// refアクセスをレンダリング後にするためのEffect
 	useEffect(() => {
 		if (cameraRef.current && stream) cameraRef.current.srcObject = stream;
 	});
