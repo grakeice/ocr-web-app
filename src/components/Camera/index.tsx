@@ -8,6 +8,8 @@ import {
 	type RefObject,
 } from "react";
 
+import { isMobile } from "react-device-detect";
+
 import { useCamera } from "./useCamera";
 
 interface CameraProps {
@@ -42,5 +44,18 @@ export function Camera({ ref, cameraOptions }: CameraProps): JSX.Element {
 		if (cameraRef.current && stream) cameraRef.current.srcObject = stream;
 	}, [stream]);
 
-	return <>{!isPending && <video ref={cameraRef} autoPlay muted></video>}</>;
+	return (
+		<div>
+			{isPending ? (
+				<>Please allow access to the camera</>
+			) : (
+				<video
+					ref={cameraRef}
+					style={{ transform: !isMobile ? "scaleX(-1)" : "unset" }}
+					autoPlay
+					muted
+				></video>
+			)}
+		</div>
+	);
 }
