@@ -1,9 +1,11 @@
 {
 	"cSpell.words": [
+		"LSTM",
 		"nonconstructor",
 		"oxlint",
 		"oxlintrc",
 		"polyfillio",
+		"tesseract",
 		"textnodes",
 		"tsgolint"
 	],
