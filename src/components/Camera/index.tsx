@@ -52,8 +52,13 @@ export function Camera({
 
 	// refアクセスをレンダリング後にするためのEffect
 	useEffect(() => {
-		if (cameraRef.current && stream) cameraRef.current.srcObject = stream;
-	});
+		const video = cameraRef.current;
+		if (video) video.srcObject = stream ?? null;
+
+		return () => {
+			if (video) video.srcObject = null;
+		};
+	}, [stream, cameraRef]);
 
 	return (
 		<div>
