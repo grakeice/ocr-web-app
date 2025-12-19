@@ -1,36 +1,14 @@
-import {
-	createScheduler,
-	createWorker,
-	OEM,
-	PSM,
-	type ImageLike,
-} from "tesseract.js";
+"use server";
 
-export async function recognizeText(image: ImageLike) {
-	const scheduler = createScheduler();
-	const workers = [...Array(4).keys()].map(() =>
-		createWorker(["jpn"], OEM.TESSERACT_LSTM_COMBINED),
-	);
-	for (const worker of await Promise.all(workers)) {
-		await worker.setParameters({
-			tessedit_pageseg_mode: PSM.AUTO,
-			// LSTMモデルで日本語の間にスペースが表示される問題への対処
-			preserve_interword_spaces: "1",
-		});
-		scheduler.addWorker(worker);
-	}
-	const result = await scheduler.addJob(
-		"recognize",
-		image,
-		{
-			rotateAuto: true,
-		},
-		{
-			blocks: true,
-			text: true,
-		},
-	);
-	await scheduler.terminate();
+import vision from "@google-cloud/vision";
 
-	return result;
+export async function recognizeText(image: ArrayBuffer) {
+	const source = Buffer.from(image);
+	const client = new vision.ImageAnnotatorClient();
+
+	const [result] = await client.documentTextDetection(source);
+	const detections = result.textAnnotations;
+	// console.log(JSON.stringify(detections))
+	// const detections = await import("./response.json") as google.cloud.vision.v1.IEntityAnnotation;
+	return detections;
 }

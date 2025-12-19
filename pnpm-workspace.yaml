@@ -1,5 +1,7 @@
 onlyBuiltDependencies:
   - "@scribe.js/tesseract.js"
+  - onnxruntime-node
+  - protobufjs
   - sharp
   - tesseract.js
   - unrs-resolver
