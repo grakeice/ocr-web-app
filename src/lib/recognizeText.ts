@@ -8,7 +8,8 @@ export async function recognizeText(image: ArrayBuffer) {
 
 	const [result] = await client.documentTextDetection(source);
 	const detections = result.textAnnotations;
+	const fullTextAnnotation = result.fullTextAnnotation;
 	// console.log(JSON.stringify(detections))
 	// const detections = await import("./response.json") as google.cloud.vision.v1.IEntityAnnotation;
-	return detections;
+	return { detections, fullTextAnnotation };
 }
