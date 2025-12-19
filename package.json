@@ -16,6 +16,7 @@
 		"react": "19.2.3",
 		"react-device-detect": "^2.2.3",
 		"react-dom": "19.2.3",
+		"scribe.js-ocr": "^0.9.3",
 		"tesseract.js": "^7.0.0"
 	},
 	"devDependencies": {

@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
+  - "@scribe.js/tesseract.js"
   - sharp
   - tesseract.js
   - unrs-resolver

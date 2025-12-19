@@ -11,11 +11,11 @@ import {
 
 import { createScheduler, createWorker, OEM } from "tesseract.js";
 
-interface OCRProps {
+interface RealtimeOCRProps {
 	source: RefObject<HTMLVideoElement | null>;
 }
 
-export function OCR({ source }: OCRProps): JSX.Element {
+export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 	const scheduler = useRef(createScheduler());
 	const isPending = useRef(true);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -25,6 +25,7 @@ export function OCR({ source }: OCRProps): JSX.Element {
 		const canvas = canvasRef.current;
 
 		if (source.current && !isPending.current && canvas) {
+			// console.log(source.current);
 			canvas.width = source.current.videoWidth;
 			canvas.height = source.current.videoHeight;
 			canvas
@@ -75,5 +76,10 @@ export function OCR({ source }: OCRProps): JSX.Element {
 		};
 	}, []);
 
-	return <>{text}</>;
+	return (
+		<div>
+			<div id={"canvas"}></div>
+			{text}
+		</div>
+	);
 }

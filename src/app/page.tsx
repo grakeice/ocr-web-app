@@ -3,7 +3,7 @@
 import { useRef } from "react";
 
 import { Camera, type CameraComponent } from "@/components/Camera";
-import { OCR } from "@/components/OCR";
+import { RealtimeOCR } from "@/components/RealtimeOCR";
 
 export default function Home() {
 	const cameraRef = useRef<CameraComponent>(null);
@@ -14,8 +14,13 @@ export default function Home() {
 			<button onClick={() => cameraRef.current?.start()}>
 				ボタンだよ
 			</button>
-			<Camera ref={cameraRef} videoRef={videoRef} />
-			<OCR source={videoRef} />
+			<button onClick={() => cameraRef.current?.pause()}>pause</button>
+			<Camera
+				ref={cameraRef}
+				videoRef={videoRef}
+				className={"h-[70vh]"}
+			/>
+			<RealtimeOCR source={videoRef} />
 		</div>
 	);
 }

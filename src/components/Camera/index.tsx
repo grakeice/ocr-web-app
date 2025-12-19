@@ -21,6 +21,7 @@ interface CameraProps {
 
 export interface CameraComponent {
 	start(): void;
+	pause(): void;
 	videoElement: HTMLVideoElement | null;
 }
 
@@ -45,6 +46,9 @@ export function Camera({
 		return {
 			start() {
 				request();
+			},
+			pause() {
+				videoRef?.current?.pause();
 			},
 			videoElement: cameraRef.current,
 		};

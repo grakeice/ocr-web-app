@@ -17,10 +17,15 @@ export function useCamera(
 			// モバイルだったら外カメ
 			const cameraStream = await navigator.mediaDevices.getUserMedia({
 				video: isMobile
-					? { facingMode: { exact: "environment" } }
+					? {
+							facingMode: { exact: "environment" },
+							width: 1920,
+							height: 1080,
+						}
 					: options.video,
 				audio: options.audio,
 			});
+			console.log(cameraStream.getVideoTracks()[0].getSettings());
 
 			setStream(cameraStream);
 			setIsPending(false);
