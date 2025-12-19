@@ -9,7 +9,7 @@ import {
 	type RefObject,
 } from "react";
 
-import { createScheduler, createWorker, OEM } from "tesseract.js";
+import { createScheduler, createWorker, OEM, PSM } from "tesseract.js";
 
 interface RealtimeOCRProps {
 	source: RefObject<HTMLVideoElement | null>;
@@ -39,7 +39,7 @@ export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 				);
 			const { data } = await scheduler.current.addJob(
 				"recognize",
-				canvas,
+				source.current,
 			);
 			setText(data.text);
 		}
@@ -52,11 +52,16 @@ export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 		canvasRef.current = canvas;
 
 		(async () => {
-			const workers = [...Array(4).keys()].map(() =>
-				createWorker("jpn", OEM.TESSERACT_LSTM_COMBINED),
+			const workers = [...Array(1).keys()].map(() =>
+				createWorker(["jpn", "eng"], OEM.TESSERACT_LSTM_COMBINED),
 			);
 
 			for (const worker of await Promise.all(workers)) {
+				await worker.setParameters({
+					tessedit_pageseg_mode: PSM.AUTO,
+					// LSTMモデルで日本語の間にスペースが表示される問題への対処
+					preserve_interword_spaces: "1",
+				});
 				console.log("worker added");
 				_scheduler.addWorker(worker);
 			}

@@ -1,10 +1,13 @@
 {
 	"cSpell.words": [
+		"interword",
 		"LSTM",
 		"nonconstructor",
 		"oxlint",
 		"oxlintrc",
+		"pageseg",
 		"polyfillio",
+		"tessedit",
 		"tesseract",
 		"textnodes",
 		"tsgolint"

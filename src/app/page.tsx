@@ -1,26 +1,31 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 
-import { Camera, type CameraComponent } from "@/components/Camera";
-import { RealtimeOCR } from "@/components/RealtimeOCR";
+import { recognizeText } from "@/lib/recognizeText";
 
 export default function Home() {
-	const cameraRef = useRef<CameraComponent>(null);
-	const videoRef = useRef<HTMLVideoElement>(null);
-
+	const [text, setText] = useState("");
 	return (
-		<div>
-			<button onClick={() => cameraRef.current?.start()}>
-				ボタンだよ
-			</button>
-			<button onClick={() => cameraRef.current?.pause()}>pause</button>
-			<Camera
-				ref={cameraRef}
-				videoRef={videoRef}
-				className={"h-[70vh]"}
+		<>
+			<input
+				type={"file"}
+				accept={"image/*"}
+				onChange={async (e) => {
+					const files = e.currentTarget.files;
+
+					if (!files) return;
+
+					const file = files[0];
+
+					const { data } = await recognizeText(file);
+
+					console.log(data);
+
+					setText(data.text);
+				}}
 			/>
-			<RealtimeOCR source={videoRef} />
-		</div>
+			<p className={"whitespace-pre-wrap"}>{text}</p>
+		</>
 	);
 }

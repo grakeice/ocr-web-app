@@ -19,8 +19,6 @@ export function useCamera(
 				video: isMobile
 					? {
 							facingMode: { exact: "environment" },
-							width: 1920,
-							height: 1080,
 						}
 					: options.video,
 				audio: options.audio,
