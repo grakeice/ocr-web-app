@@ -43,3 +43,5 @@ next-env.d.ts
 certificates
 
 credentials
+/public/response.json
+/public/response_gemini.json
