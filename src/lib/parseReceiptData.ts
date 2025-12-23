@@ -2,24 +2,16 @@
 
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
+import { receiptSchema } from "@/schemas/receiptSchema";
+
 export async function parseReceiptData(source: string) {
 	const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string;
 	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
-	const receiptSchema = z.array(
-		z.object({
-			name: z.string().describe("商品名"),
-			price: z.number().describe("商品ひとつあたりの値段"),
-			count: z.number().describe("商品の個数"),
-			totalPrice: z
-				.number()
-				.describe("その商品の合計の値段(priceとcountの積)"),
-		}),
-	);
 
 	// const response = await ai.models.generateContent({
 	// 	model: "gemini-2.0-flash-lite",
@@ -43,9 +35,10 @@ export async function parseReceiptData(source: string) {
 
 	// const data = JSON.parse(response.text) as z.infer<typeof receiptSchema>;
 
-	const data = await (
+	const data = (await (
 		await fetch("https://localhost:3000/response_gemini.json")
-	).json();
+	).json()) as z.infer<typeof receiptSchema>;
+	await setTimeout(1000);
 
 	// writeFileSync(
 	// 	path.join(process.cwd(), "public", "response_gemini.json"),

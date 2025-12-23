@@ -2,6 +2,7 @@
 
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 
 import vision from "@google-cloud/vision";
 import type { google } from "@google-cloud/vision/build/protos/protos";
@@ -15,6 +16,7 @@ export async function recognizeText(image: ArrayBuffer) {
 	const result = (await (
 		await fetch("https://localhost:3000/response.json")
 	).json()) as google.cloud.vision.v1.IAnnotateImageResponse;
+	await setTimeout(1000);
 
 	const detections = result.textAnnotations;
 	const fullTextAnnotation = result.fullTextAnnotation;
