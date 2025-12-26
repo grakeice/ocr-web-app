@@ -1,19 +1,42 @@
 "use client";
 
-import { useActionState, useState, type JSX } from "react";
+import { Fragment, useActionState, useEffect, useState, type JSX } from "react";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "motion/react";
+import { useFieldArray, useForm } from "react-hook-form";
+import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { readFile } from "@/lib/readFile";
+import { receiptSchema } from "@/schemas/receiptSchema";
+import { ImageInput } from "@/stories/ImageInput";
+import { ReceiptForm } from "@/stories/ReceiptForm";
 
-import { ImageInput } from "../../stories/ImageInput";
 import { submitImage } from "./_actions/submitImage";
 
 export default function Page(): JSX.Element {
 	const [state, formAction, isPending] = useActionState(submitImage, null);
 	const [, setFiles] = useState<{ data: ArrayBuffer; name: string }[]>();
+	const form = useForm<z.infer<typeof receiptSchema>>({
+		resolver: zodResolver(receiptSchema),
+		defaultValues: {
+			items: [
+				{ name: "", price: 0, count: 0, discount: 0, totalPrice: 0 },
+			],
+		},
+	});
+	const { fields, append, remove } = useFieldArray({
+		control: form.control,
+		name: "items",
+	});
+
+	const onSubmit = (data: z.infer<typeof receiptSchema>) => {};
+
+	useEffect(() => {
+		form.reset({ items: state?.items });
+	}, [form, state]);
 	return (
 		<div className={"mx-2 mt-4 max-w-100 md:mx-auto"}>
 			<form action={formAction} className={"flex flex-col gap-4"}>
@@ -65,7 +88,20 @@ export default function Page(): JSX.Element {
 			</form>
 			{!isPending && state && (
 				<>
-					<code>{JSON.stringify(state)}</code>
+					<form onSubmit={form.handleSubmit(onSubmit)}>
+						<div className={"mt-4 flex flex-col gap-8"}>
+							{fields.map((field, index) => (
+								<Fragment key={field.id}>
+									<hr />
+									<ReceiptForm
+										index={index}
+										register={form.register}
+										onRemove={remove}
+									/>
+								</Fragment>
+							))}
+						</div>
+					</form>
 				</>
 			)}
 		</div>

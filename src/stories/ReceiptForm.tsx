@@ -9,6 +9,8 @@ import {
 	TagIcon,
 	XIcon,
 } from "lucide-react";
+import type { UseFormRegister } from "react-hook-form";
+import type { z } from "zod";
 
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import {
@@ -16,8 +18,17 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import type { receiptSchema } from "@/schemas/receiptSchema";
 
-export function ReceiptForm(): JSX.Element {
+interface ReceiptFormProps {
+	index: number;
+	register: UseFormRegister<z.infer<typeof receiptSchema>>;
+	onRemove: (index: number) => void;
+}
+export function ReceiptForm({
+	index,
+	register,
+}: ReceiptFormProps): JSX.Element {
 	return (
 		<FieldSet>
 			<FieldGroup>
@@ -30,10 +41,11 @@ export function ReceiptForm(): JSX.Element {
 						<InputGroupInput
 							placeholder={"---"}
 							autoComplete={"off"}
+							{...register(`items.${index}.name`)}
 						/>
 					</InputGroup>
 				</Field>
-				<Field className={"box-border rounded-lg border p-3"}>
+				<Field className={"box-border rounded-lg border p-3 shadow-xs"}>
 					<div className={"flex flex-row items-center gap-1"}>
 						<Field className={"flex-3"}>
 							<FieldLabel>一個あたりの値段</FieldLabel>
@@ -45,6 +57,7 @@ export function ReceiptForm(): JSX.Element {
 									type={"number"}
 									placeholder={"---"}
 									autoComplete={"off"}
+									{...register(`items.${index}.price`)}
 								/>
 								<InputGroupAddon align={"inline-end"}>
 									<span>円</span>
@@ -64,6 +77,7 @@ export function ReceiptForm(): JSX.Element {
 									type={"number"}
 									placeholder={"---"}
 									autoComplete={"off"}
+									{...register(`items.${index}.count`)}
 								/>
 								<InputGroupAddon align={"inline-end"}>
 									<span>個</span>
@@ -80,6 +94,7 @@ export function ReceiptForm(): JSX.Element {
 							<InputGroupInput
 								type={"number"}
 								placeholder={"---"}
+								{...register(`items.${index}.discount`)}
 							/>
 							<InputGroupAddon align={"inline-end"}>
 								<span>円</span>
@@ -96,7 +111,11 @@ export function ReceiptForm(): JSX.Element {
 						<InputGroupAddon align={"inline-start"}>
 							<BadgeJapaneseYenIcon />
 						</InputGroupAddon>
-						<InputGroupInput type={"number"} placeholder={"---"} />
+						<InputGroupInput
+							type={"number"}
+							placeholder={"---"}
+							{...register(`items.${index}.totalPrice`)}
+						/>
 						<InputGroupAddon align={"inline-end"}>
 							<span>円</span>
 						</InputGroupAddon>
