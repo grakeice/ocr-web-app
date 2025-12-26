@@ -3,16 +3,17 @@
 import { Fragment, useActionState, useEffect, useState, type JSX } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import clsx from "clsx";
 import { AnimatePresence, motion } from "motion/react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, type Resolver } from "react-hook-form";
 import type { z } from "zod";
 
+import { ReceiptForm } from "@/app/new/_components/ReceiptForm";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { readFile } from "@/lib/readFile";
 import { receiptSchema } from "@/schemas/receiptSchema";
 import { ImageInput } from "@/stories/ImageInput";
-import { ReceiptForm } from "@/stories/ReceiptForm";
 
 import { submitImage } from "./_actions/submitImage";
 
@@ -20,19 +21,23 @@ export default function Page(): JSX.Element {
 	const [state, formAction, isPending] = useActionState(submitImage, null);
 	const [, setFiles] = useState<{ data: ArrayBuffer; name: string }[]>();
 	const form = useForm<z.infer<typeof receiptSchema>>({
-		resolver: zodResolver(receiptSchema),
+		resolver: zodResolver(receiptSchema) as unknown as Resolver<
+			z.infer<typeof receiptSchema>
+		>,
 		defaultValues: {
 			items: [
 				{ name: "", price: 0, count: 0, discount: 0, totalPrice: 0 },
 			],
 		},
 	});
-	const { fields, append, remove } = useFieldArray({
+	const { fields, remove } = useFieldArray({
 		control: form.control,
 		name: "items",
 	});
 
-	const onSubmit = (data: z.infer<typeof receiptSchema>) => {};
+	const onSubmit = (data: z.infer<typeof receiptSchema>) => {
+		console.log(data);
+	};
 
 	useEffect(() => {
 		form.reset({ items: state?.items });
@@ -67,7 +72,14 @@ export default function Page(): JSX.Element {
 						setFiles(files);
 					}}
 				/>
-				<Button className={"w-full"} type={"submit"}>
+				<Button
+					type={"submit"}
+					className={clsx(
+						"w-full",
+						!isPending && state && "cursor-not-allowed",
+					)}
+					disabled={Boolean(!isPending && state)}
+				>
 					<AnimatePresence>
 						<motion.span key={"description"} layout>
 							読み込む
@@ -89,17 +101,20 @@ export default function Page(): JSX.Element {
 			{!isPending && state && (
 				<>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
-						<div className={"mt-4 flex flex-col gap-8"}>
+						<div className={"my-4 flex flex-col gap-8"}>
 							{fields.map((field, index) => (
 								<Fragment key={field.id}>
 									<hr />
 									<ReceiptForm
 										index={index}
-										register={form.register}
+										control={form.control}
 										onRemove={remove}
 									/>
 								</Fragment>
 							))}
+							<Button type={"submit"} className={"w-full"}>
+								保存する
+							</Button>
 						</div>
 					</form>
 				</>
