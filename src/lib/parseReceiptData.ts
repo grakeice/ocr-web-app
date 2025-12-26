@@ -7,11 +7,11 @@ import { setTimeout } from "node:timers/promises";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 
+import { env } from "@/env";
 import { receiptSchema } from "@/schemas/receiptSchema";
 
 export async function parseReceiptData(source: string) {
-	const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string;
-	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+	const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
 	// const response = await ai.models.generateContent({
 	// 	model: "gemini-2.5-flash-lite",

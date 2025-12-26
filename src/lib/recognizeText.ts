@@ -7,11 +7,12 @@ import { setTimeout } from "node:timers/promises";
 import vision from "@google-cloud/vision";
 import type { google } from "@google-cloud/vision/build/protos/protos";
 
+import { env } from "@/env";
+
 export async function recognizeText(image: ArrayBuffer) {
-	const CLOUD_VISION_API_KEY = process.env.CLOUD_VISION_API_KEY;
 	const source = Buffer.from(image);
 	const client = new vision.ImageAnnotatorClient({
-		apiKey: CLOUD_VISION_API_KEY,
+		apiKey: env.CLOUD_VISION_API_KEY,
 	});
 
 	// const [result] = await client.textDetection(source);

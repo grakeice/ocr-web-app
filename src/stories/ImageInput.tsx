@@ -118,7 +118,7 @@ export function ImageInput({
 							const input = fileInputRef.current;
 							if (!input) return;
 
-							/* Reactはこの操作を監視していないので強制的に発火する */ {
+							/** Reactはこの操作を監視していないので強制的に発火する */ {
 								input.files = e.dataTransfer.files;
 								input.dispatchEvent(
 									new Event("change", { bubbles: true }),
