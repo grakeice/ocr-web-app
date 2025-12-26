@@ -30,7 +30,8 @@ export async function recognizeText(image: ImageLike) {
 			text: true,
 		},
 	);
-	await scheduler.terminate();
+
+	scheduler.terminate();
 
 	return result;
 }

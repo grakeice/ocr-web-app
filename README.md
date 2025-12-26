@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## ENVs
+
+- `GEMINI_API_KEY`\
+  GeminiのAPIキー
+- `CLOUD_VISION_API_KEY`\
+  Cloud Vision APIのAPIキー
+
 ## Getting Started
 
 First, run the development server:

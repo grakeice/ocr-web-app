@@ -45,3 +45,6 @@ certificates
 credentials
 /public/response.json
 /public/response_gemini.json
+
+*storybook.log
+storybook-static

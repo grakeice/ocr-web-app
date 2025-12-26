@@ -1,5 +1,6 @@
 onlyBuiltDependencies:
   - "@scribe.js/tesseract.js"
+  - esbuild
   - onnxruntime-node
   - protobufjs
   - sharp
