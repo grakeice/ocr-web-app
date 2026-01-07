@@ -2,7 +2,6 @@
 
 import { Activity, Suspense, useState, useTransition, type JSX } from "react";
 
-import clsx from "clsx";
 import { hc } from "hono/client";
 import { AnimatePresence, motion } from "motion/react";
 import useSWR from "swr/immutable";
@@ -24,10 +23,7 @@ function ReceiptContainer({ file }: ReceiptProps): JSX.Element {
 		const res = await client.api.parse.$post({
 			form: { file: args },
 		});
-		if (res.ok) {
-			const result = await res.json();
-			return result;
-		}
+		if (res.ok) return await res.json();
 	};
 
 	const receiptData = useSWR(file ? file : null, fetcher, {
@@ -58,11 +54,8 @@ export default function Page(): JSX.Element {
 				/>
 				<Button
 					type={"submit"}
-					className={clsx(
-						"w-full",
-						(isPending || !file) && "cursor-not-allowed",
-					)}
-					disabled={isPending}
+					className={"w-full"}
+					disabled={isPending || !file}
 					onClick={() => {
 						startTransition(() => {
 							setAnalysisTarget(file);
@@ -94,7 +87,7 @@ export default function Page(): JSX.Element {
 					>
 						<ReceiptContainer
 							file={analysisTarget}
-							key={analysisTarget?.name}
+							key={`${analysisTarget?.name}:${analysisTarget?.size}:${analysisTarget?.lastModified}`}
 						/>
 					</Activity>
 				</Suspense>
