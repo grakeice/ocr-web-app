@@ -22,13 +22,17 @@ import { readFile } from "@/lib/readFile";
 
 import { PreviewImage } from "./PreviewImage";
 
+interface ImageInputProps {
+	showPreview?: boolean;
+}
 export function ImageInput({
+	showPreview = true,
 	id,
 	ref,
 	multiple,
 	onChange,
 	...props
-}: ComponentProps<"input">): JSX.Element {
+}: ImageInputProps & ComponentProps<"input">): JSX.Element {
 	const [isDraggedOver, setIsDraggedOver] = useState(false);
 	const refInner = useRef<HTMLInputElement>(null);
 	const fileInputRef = (ref ??
@@ -126,34 +130,36 @@ export function ImageInput({
 							}
 						}}
 					>
-						<motion.div
-							layout
-							className={
-								"pointer-events-none flex flex-col items-center justify-center gap-2 select-none"
-							}
-						>
-							{files?.length ? (
-								files.map((file) => (
-									<PreviewImage
-										key={file.name}
-										file={file.data}
-									/>
-								))
-							) : (
-								<>
-									<div
-										className={
-											"bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6"
-										}
-									>
-										<ImageUpIcon />
-									</div>
-									<div className={"text-lg font-bold"}>
-										画像をアップロードしてください
-									</div>
-								</>
-							)}
-						</motion.div>
+						{showPreview && (
+							<motion.div
+								layout
+								className={
+									"pointer-events-none flex flex-col items-center justify-center gap-2 select-none"
+								}
+							>
+								{files?.length ? (
+									files.map((file) => (
+										<PreviewImage
+											key={file.name}
+											file={file.data}
+										/>
+									))
+								) : (
+									<>
+										<div
+											className={
+												"bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6"
+											}
+										>
+											<ImageUpIcon />
+										</div>
+										<div className={"text-lg font-bold"}>
+											画像をアップロードしてください
+										</div>
+									</>
+								)}
+							</motion.div>
+						)}
 					</div>
 				</motion.div>
 			</AnimatePresence>

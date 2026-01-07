@@ -11,8 +11,7 @@ const app = new Hono()
 	.basePath("/api")
 	.post("/parse", zValidator("form", imageUploadSchema), async (c) => {
 		const { file } = c.req.valid("form");
-		// console.log((await c.req.parseBody()))
-		console.log(file);
+
 		const { fullTextAnnotation } = await recognizeText(
 			await file.arrayBuffer(),
 		);

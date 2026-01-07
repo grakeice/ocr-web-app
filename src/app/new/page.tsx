@@ -1,6 +1,15 @@
 "use client";
 
-import { Activity, Suspense, useState, useTransition, type JSX } from "react";
+import {
+	Activity,
+	Suspense,
+	useImperativeHandle,
+	useRef,
+	useState,
+	useTransition,
+	type JSX,
+	type RefObject,
+} from "react";
 
 import clsx from "clsx";
 import { hc } from "hono/client";
@@ -14,30 +23,55 @@ import { ImageInput } from "@/stories/ImageInput";
 import type { AppType } from "../api/[[...route]]/route";
 import { ReceiptDataField } from "./_components/ReceiptDataField";
 
+interface ReceiptContainerComponent {
+	startAnalyze(): void;
+}
 interface ReceiptProps {
 	file: File | undefined;
+	ref?: RefObject<ReceiptContainerComponent | null>;
 }
-function ReceiptContainer({ file }: ReceiptProps): JSX.Element {
+function ReceiptContainer({ ref, file }: ReceiptProps): JSX.Element {
+	const [started, setStarted] = useState(false);
+
+	/**
+	 * 解析が開始されたかどうかの状態は親コンポーネントで管理すべきでないという考えのもと、
+	 * 解析を開始するというのは命令的な操作なので、意図的にPropsによる状態管理を避けた。
+	 */ {
+		useImperativeHandle(ref, () => ({
+			startAnalyze: () => {
+				setStarted(true);
+			},
+		}));
+	}
+
 	const client = hc<AppType>("/");
 	const fetcher = async (args: typeof file) => {
 		if (!args) return;
-		console.log(args);
 		const res = await client.api.parse.$post({
 			form: { file: args },
 		});
 		if (res.ok) {
-			return await res.json();
+			const result = await res.json();
+			return result;
 		}
 	};
-	const receiptData = useSWR(file, fetcher, {
+
+	const receiptData = useSWR(() => (started && file ? file : null), fetcher, {
 		suspense: true,
 	});
-	return <ReceiptDataField key={file?.name} data={receiptData.data} />;
+
+	return (
+		<ReceiptDataField
+			key={`name=${file?.name};loaded=${started}`}
+			data={receiptData.data}
+		/>
+	);
 }
 
 export default function Page(): JSX.Element {
 	const [file, setFile] = useState<File>();
 	const [isPending, startTransition] = useTransition();
+	const receiptContainerRef = useRef<ReceiptContainerComponent>(null);
 
 	return (
 		<div className={"mx-2 mt-4 max-w-100 md:mx-auto"}>
@@ -50,9 +84,7 @@ export default function Page(): JSX.Element {
 						if (!inputtedFiles) return;
 						const file = inputtedFiles.item(0);
 						if (!file) return;
-						startTransition(() => {
-							setFile(file);
-						});
+						setFile(file);
 					}}
 				/>
 				<Button
@@ -62,6 +94,11 @@ export default function Page(): JSX.Element {
 						(isPending || !file) && "cursor-not-allowed",
 					)}
 					disabled={isPending}
+					onClick={() => {
+						startTransition(() => {
+							receiptContainerRef.current?.startAnalyze();
+						});
+					}}
 				>
 					<AnimatePresence>
 						<motion.span key={"description"} layout>
@@ -82,7 +119,11 @@ export default function Page(): JSX.Element {
 				</Button>
 				<Suspense>
 					<Activity mode={!isPending && file ? "visible" : "hidden"}>
-						<ReceiptContainer file={file} />
+						<ReceiptContainer
+							file={file}
+							ref={receiptContainerRef}
+							key={file?.name}
+						/>
 					</Activity>
 				</Suspense>
 			</div>

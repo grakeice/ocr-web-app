@@ -32,6 +32,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 	const onSubmit = (data: z.infer<typeof receiptSchema>) => {
 		console.log(data);
 	};
+
 	return (
 		<form onSubmit={form.handleSubmit(onSubmit)}>
 			<div className={"my-4 flex flex-col gap-8"}>
@@ -45,9 +46,11 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						/>
 					</Fragment>
 				))}
-				<Button type={"submit"} className={"w-full"}>
-					保存する
-				</Button>
+				{fields.length !== 0 && (
+					<Button type={"submit"} className={"w-full"}>
+						保存する
+					</Button>
+				)}
 			</div>
 		</form>
 	);
