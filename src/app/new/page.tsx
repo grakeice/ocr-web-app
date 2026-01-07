@@ -1,20 +1,11 @@
 "use client";
 
-import {
-	Activity,
-	Suspense,
-	useImperativeHandle,
-	useRef,
-	useState,
-	useTransition,
-	type JSX,
-	type RefObject,
-} from "react";
+import { Activity, Suspense, useState, useTransition, type JSX } from "react";
 
 import clsx from "clsx";
 import { hc } from "hono/client";
 import { AnimatePresence, motion } from "motion/react";
-import useSWR from "swr";
+import useSWR from "swr/immutable";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -23,27 +14,10 @@ import { ImageInput } from "@/stories/ImageInput";
 import type { AppType } from "../api/[[...route]]/route";
 import { ReceiptDataField } from "./_components/ReceiptDataField";
 
-interface ReceiptContainerComponent {
-	startAnalyze(): void;
-}
 interface ReceiptProps {
 	file: File | undefined;
-	ref?: RefObject<ReceiptContainerComponent | null>;
 }
-function ReceiptContainer({ ref, file }: ReceiptProps): JSX.Element {
-	const [started, setStarted] = useState(false);
-
-	/**
-	 * 解析が開始されたかどうかの状態は親コンポーネントで管理すべきでないという考えのもと、
-	 * 解析を開始するというのは命令的な操作なので、意図的にPropsによる状態管理を避けた。
-	 */ {
-		useImperativeHandle(ref, () => ({
-			startAnalyze: () => {
-				setStarted(true);
-			},
-		}));
-	}
-
+function ReceiptContainer({ file }: ReceiptProps): JSX.Element {
 	const client = hc<AppType>("/");
 	const fetcher = async (args: typeof file) => {
 		if (!args) return;
@@ -56,22 +30,17 @@ function ReceiptContainer({ ref, file }: ReceiptProps): JSX.Element {
 		}
 	};
 
-	const receiptData = useSWR(() => (started && file ? file : null), fetcher, {
+	const receiptData = useSWR(file ? file : null, fetcher, {
 		suspense: true,
 	});
 
-	return (
-		<ReceiptDataField
-			key={`name=${file?.name};loaded=${started}`}
-			data={receiptData.data}
-		/>
-	);
+	return <ReceiptDataField data={receiptData.data} />;
 }
 
 export default function Page(): JSX.Element {
 	const [file, setFile] = useState<File>();
 	const [isPending, startTransition] = useTransition();
-	const receiptContainerRef = useRef<ReceiptContainerComponent>(null);
+	const [analysisTarget, setAnalysisTarget] = useState<File>();
 
 	return (
 		<div className={"mx-2 mt-4 max-w-100 md:mx-auto"}>
@@ -96,7 +65,7 @@ export default function Page(): JSX.Element {
 					disabled={isPending}
 					onClick={() => {
 						startTransition(() => {
-							receiptContainerRef.current?.startAnalyze();
+							setAnalysisTarget(file);
 						});
 					}}
 				>
@@ -117,12 +86,15 @@ export default function Page(): JSX.Element {
 						)}
 					</AnimatePresence>
 				</Button>
-				<Suspense>
-					<Activity mode={!isPending && file ? "visible" : "hidden"}>
+				<Suspense fallback={<Spinner />}>
+					<Activity
+						mode={
+							!isPending && analysisTarget ? "visible" : "hidden"
+						}
+					>
 						<ReceiptContainer
-							file={file}
-							ref={receiptContainerRef}
-							key={file?.name}
+							file={analysisTarget}
+							key={analysisTarget?.name}
 						/>
 					</Activity>
 				</Suspense>
