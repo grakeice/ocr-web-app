@@ -1,10 +1,8 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
 import { handle } from "hono/vercel";
 
-import { parseReceiptData } from "@/lib/parseReceiptData";
-import { recognizeText } from "@/lib/recognizeText";
+import { image2ReceiptData } from "@/lib/image2ReceiptData";
 import { imageUploadSchema } from "@/schemas/imageUploadSchema";
 
 const app = new Hono()
@@ -12,14 +10,9 @@ const app = new Hono()
 	.post("/parse", zValidator("form", imageUploadSchema), async (c) => {
 		const { file } = c.req.valid("form");
 
-		const { fullTextAnnotation } = await recognizeText(
-			await file.arrayBuffer(),
-		);
-		const text = fullTextAnnotation?.text;
-		if (!text) throw new HTTPException(500);
+		const result = await image2ReceiptData(await file.arrayBuffer());
 
-		const data = await parseReceiptData(text);
-		return c.json(data);
+		return c.json(result);
 	});
 
 export const GET = handle(app);

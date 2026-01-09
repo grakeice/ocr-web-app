@@ -15,7 +15,10 @@ export async function parseReceiptData(source: string) {
 
 	// const response = await ai.models.generateContent({
 	// 	model: "gemini-2.5-flash-lite",
-	// 	contents: JSON.stringify(source),
+	// 	contents: [
+	// 		"レシートが日本語であれば、レシート内の時間はJSTなので出力する時間をGMTに変換してください。",
+	// 		JSON.stringify(source),
+	// 	],
 	// 	config: {
 	// 		responseMimeType: "application/json",
 	// 		responseJsonSchema: z.toJSONSchema(receiptSchema),
@@ -24,7 +27,6 @@ export async function parseReceiptData(source: string) {
 	// 		},
 	// 	},
 	// });
-
 	// if (!response.text) return;
 
 	// const data = JSON.parse(response.text) as z.infer<typeof receiptSchema>;
