@@ -4,13 +4,15 @@ import { type JSX } from "react";
 
 import {
 	BadgeJapaneseYenIcon,
+	BadgePercentIcon,
 	BaggageClaimIcon,
 	EqualIcon,
+	PlusIcon,
 	TagIcon,
 	XIcon,
 } from "lucide-react";
-import { Controller, type Control } from "react-hook-form";
-import type { z } from "zod";
+import { Controller, useFormState, type Control } from "react-hook-form";
+import { z } from "zod";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -24,7 +26,15 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import type { receiptSchema } from "@/schemas/receiptSchema";
+import {
+	NativeSelect,
+	NativeSelectOptGroup,
+	NativeSelectOption,
+} from "@/components/ui/native-select";
+import {
+	ConsumptionTaxClassification,
+	receiptSchema,
+} from "@/schemas/receiptSchema";
 
 interface ReceiptFormProps {
 	index: number;
@@ -32,6 +42,8 @@ interface ReceiptFormProps {
 	onRemove: (index: number) => void;
 }
 export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
+	const { errors } = useFormState({ control });
+
 	return (
 		<Card>
 			<CardContent>
@@ -71,11 +83,11 @@ export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
 								control={control}
 								render={({ field, fieldState }) => (
 									<Field
-										className={"flex-3"}
+										className={"flex-5"}
 										data-invalid={fieldState.invalid}
 									>
 										<FieldLabel htmlFor={field.name}>
-											一個あたりの値段
+											一個あたりの値段（税抜）
 										</FieldLabel>
 										<InputGroup>
 											<InputGroupAddon
@@ -99,11 +111,6 @@ export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
 												<span>円</span>
 											</InputGroupAddon>
 										</InputGroup>
-										{fieldState.invalid && (
-											<FieldError
-												errors={[fieldState.error]}
-											/>
-										)}
 									</Field>
 								)}
 							/>
@@ -145,15 +152,19 @@ export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
 												<span>個</span>
 											</InputGroupAddon>
 										</InputGroup>
-										{fieldState.invalid && (
-											<FieldError
-												errors={[fieldState.error]}
-											/>
-										)}
 									</Field>
 								)}
 							/>
 						</div>
+						{(errors.items?.[index]?.price ||
+							errors.items?.[index]?.count) && (
+							<FieldError
+								errors={[
+									errors.items[index]?.price,
+									errors.items[index]?.count,
+								]}
+							/>
+						)}
 						<Controller
 							name={`items.${index}.discount`}
 							control={control}
@@ -187,10 +198,132 @@ export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
 						/>
 					</Field>
 					<div className={"-my-4 flex items-center justify-center"}>
+						<PlusIcon className={"text-gray-500"} />
+					</div>
+					<Field
+						className={"box-border rounded-lg border p-3 shadow-xs"}
+					>
+						<div className={"flex flex-row items-center gap-1"}>
+							<Controller
+								name={`items.${index}.consumptionTax.classification`}
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field
+										data-invalid={fieldState.invalid}
+										className={"flex-1"}
+									>
+										<FieldLabel htmlFor={field.name}>
+											税区分
+										</FieldLabel>
+										<NativeSelect
+											{...field}
+											id={field.name}
+											aria-invalid={fieldState.invalid}
+											onChange={field.onChange}
+										>
+											<NativeSelectOptGroup
+												label={"税率"}
+											>
+												<NativeSelectOption
+													value={
+														ConsumptionTaxClassification[
+															"10%"
+														]
+													}
+												>
+													10%
+												</NativeSelectOption>
+												<NativeSelectOption
+													value={
+														ConsumptionTaxClassification[
+															"8%"
+														]
+													}
+												>
+													8%
+												</NativeSelectOption>
+											</NativeSelectOptGroup>
+											<hr />
+											<NativeSelectOptGroup
+												label={"その他"}
+											>
+												<NativeSelectOption
+													value={
+														ConsumptionTaxClassification.exempted
+													}
+												>
+													非課税
+												</NativeSelectOption>
+												<NativeSelectOption
+													value={
+														ConsumptionTaxClassification.free
+													}
+												>
+													免税
+												</NativeSelectOption>
+												<NativeSelectOption
+													value={
+														ConsumptionTaxClassification.unknown
+													}
+												>
+													不明
+												</NativeSelectOption>
+											</NativeSelectOptGroup>
+										</NativeSelect>
+									</Field>
+								)}
+							/>
+							<Controller
+								name={`items.${index}.consumptionTax.price`}
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field
+										data-invalid={fieldState.invalid}
+										className={"flex-2"}
+									>
+										<FieldLabel htmlFor={field.name}>
+											税額
+										</FieldLabel>
+										<InputGroup>
+											<InputGroupAddon
+												align={"inline-start"}
+											>
+												<BadgePercentIcon />
+											</InputGroupAddon>
+											<InputGroupInput
+												{...field}
+												id={field.name}
+												aria-invalid={
+													fieldState.invalid
+												}
+												type={"number"}
+												placeholder={"---"}
+											/>
+											<InputGroupAddon
+												align={"inline-end"}
+											>
+												円
+											</InputGroupAddon>
+										</InputGroup>
+									</Field>
+								)}
+							/>
+						</div>
+						{errors.items?.[index]?.consumptionTax && (
+							<FieldError
+								errors={[
+									errors.items[index].consumptionTax
+										?.classification,
+									errors.items[index].consumptionTax?.price,
+								]}
+							/>
+						)}
+					</Field>
+					<div className={"-my-4 flex items-center justify-center"}>
 						<EqualIcon className={"rotate-90 text-gray-500"} />
 					</div>
 					<Controller
-						name={`items.${index}.totalPrice`}
+						name={`items.${index}.totalPriceWithTax`}
 						control={control}
 						render={({ field, fieldState }) => (
 							<Field
@@ -198,7 +331,7 @@ export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
 								data-invalid={fieldState.invalid}
 							>
 								<FieldLabel htmlFor={field.name}>
-									合計
+									合計（税込）
 								</FieldLabel>
 								<InputGroup>
 									<InputGroupAddon align={"inline-start"}>

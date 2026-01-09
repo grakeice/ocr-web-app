@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, type JSX } from "react";
+import { type JSX } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -61,7 +61,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 		console.log(form.formState.errors);
 		console.log(data);
 	};
-	console.log(data);
+
 	return (
 		<form onSubmit={form.handleSubmit(onSubmit)}>
 			<FieldSet>
@@ -142,7 +142,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 							render={({ field, fieldState }) => (
 								<Field data-invalid={fieldState.invalid}>
 									<FieldLabel htmlFor={field.name}>
-										消費税
+										消費税額
 									</FieldLabel>
 									<InputGroup>
 										<InputGroupAddon align={"inline-start"}>
@@ -203,13 +203,12 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 					</FieldGroup>
 					<hr className={"my-3"} />
 					{fields.map((field, index) => (
-						<Fragment key={field.id}>
-							<ReceiptForm
-								index={index}
-								control={form.control}
-								onRemove={remove}
-							/>
-						</Fragment>
+						<ReceiptForm
+							key={field.id}
+							index={index}
+							control={form.control}
+							onRemove={remove}
+						/>
 					))}
 					{fields.length !== 0 && (
 						<Button type={"submit"} className={"w-full"}>

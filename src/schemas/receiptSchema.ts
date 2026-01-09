@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const consumptionTaxClassificationSchema = z
+	.enum(["10%", "8%", "exempted", "free", "unknown"])
+	.describe("消費税の区分。exemptedは非課税、freeは免税");
+export const ConsumptionTaxClassification =
+	consumptionTaxClassificationSchema.enum;
+
 export const receiptSchema = z
 	.object({
 		storeName: z.string().describe("レシートが発行された店の名前"),
@@ -10,7 +16,7 @@ export const receiptSchema = z
 				price: z.coerce
 					.number()
 					.int()
-					.describe("商品ひとつあたりの値段(整数)"),
+					.describe("商品ひとつあたりの金額(税抜、整数)"),
 				count: z.coerce
 					.number()
 					.positive()
@@ -25,14 +31,21 @@ export const receiptSchema = z
 					.number()
 					.int()
 					.describe(
-						"その商品の合計の値段(整数、priceとcountの積からdiscountを引いたもの)",
+						"その商品の合計金額(税抜、整数、priceとcountの積からdiscountを引いたもの)",
 					),
 				consumptionTax: z.object({
-					class: z
-						.enum(["10%", "8%", "exempted", "free", "unknown"])
-						.describe("消費税の区分。exemptedは非課税、freeは免税"),
-					price: z.number().min(0).describe("消費税額(非負数)"),
+					classification: consumptionTaxClassificationSchema,
+					price: z.coerce
+						.number()
+						.min(0)
+						.describe("消費税額(非負数)"),
 				}),
+				totalPriceWithTax: z.coerce
+					.number()
+					.int()
+					.describe(
+						"その商品の合計金額(税込、整数, totalPriceにconsumptionTax.priceを足したもの)",
+					),
 			}),
 		),
 		consumptionTax: z.coerce
@@ -44,11 +57,11 @@ export const receiptSchema = z
 			.number()
 			.min(0)
 			.int()
-			.describe("レシートに記載された合計金額(非負整数)"),
+			.describe("レシートに記載された合計金額(税込、非負整数)"),
 	})
 	.superRefine((data, ctx) => {
 		const calculatedTotalPrice = data.items.reduce(
-			(sum, item) => sum + item.totalPrice,
+			(sum, item) => sum + item.totalPriceWithTax,
 			0,
 		);
 		console.log(calculatedTotalPrice === data.totalPrice);
@@ -59,7 +72,7 @@ export const receiptSchema = z
 			) {
 				ctx.addIssue({
 					code: "custom",
-					message: `算出された商品の合計額（${calculatedTotalPrice}円）と入力された値とが一致しませんでした。差額は ${calculatedTotalPrice - data.totalPrice} 円です。情報を修正するか、金額調整のための項目を追加してください。`,
+					message: `算出された商品の合計額（${calculatedTotalPrice}円）と入力された値とが一致しませんでした。差額は ${calculatedTotalPrice - data.totalPrice} 円です。情報を修正するか、金額調整のための項目を追加してください。Tips: 差額が大きい場合、一個あたりの値段が税込になっている可能性があります。`,
 					path: ["totalPrice"],
 				});
 			}
