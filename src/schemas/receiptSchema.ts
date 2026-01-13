@@ -8,8 +8,10 @@ export const ConsumptionTaxClassification =
 
 export const receiptSchema = z
 	.object({
-		storeName: z.string().describe("レシートが発行された店の名前"),
-		date: z.iso.datetime().describe("レシートが発行された日時(GMT)"),
+		storeName: z.string().describe("レシートや領収書が発行された店の名前"),
+		date: z.iso
+			.datetime()
+			.describe("レシートや領収書が発行された日時(GMT)"),
 		items: z.array(
 			z.object({
 				name: z.string().describe("商品名"),
@@ -57,7 +59,7 @@ export const receiptSchema = z
 			.number()
 			.min(0)
 			.int()
-			.describe("レシートに記載された合計金額(税込、非負整数)"),
+			.describe("レシートや領収書に記載された合計金額(税込、非負整数)"),
 	})
 	.superRefine((data, ctx) => {
 		const calculatedTotalPrice = data.items.reduce(
