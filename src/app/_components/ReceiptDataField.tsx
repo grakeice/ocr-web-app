@@ -7,7 +7,9 @@ import { format } from "date-fns";
 import {
 	BadgePercentIcon,
 	CalendarDaysIcon,
+	CheckIcon,
 	DownloadIcon,
+	EditIcon,
 	PlusIcon,
 	ReceiptJapaneseYenIcon,
 	StoreIcon,
@@ -44,6 +46,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 	const [downloadType, setDownloadType] = useState<"csv" | "json" | null>(
 		null,
 	);
+	const [isEditing, setIsEditing] = useState(false);
 
 	const form = useForm<z.infer<typeof receiptSchema>>({
 		/** 数値もinputを通すとstringになってしまう問題を解決するために、z.coerceを使っているので一旦unknownに変換している */
@@ -142,27 +145,6 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 		setDownloadType("json");
 		form.handleSubmit(onSubmit)();
 	};
-
-	const DownloadButton = (
-		<div className={"flex gap-2"}>
-			<Button
-				type={"button"}
-				onClick={handleDownloadJSON}
-				className={"flex-1"}
-			>
-				<DownloadIcon />
-				JSON ダウンロード
-			</Button>
-			<Button
-				type={"button"}
-				onClick={handleDownloadCSV}
-				className={"flex-1"}
-			>
-				<DownloadIcon />
-				CSV ダウンロード
-			</Button>
-		</div>
-	);
 
 	return (
 		<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -304,33 +286,61 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						/>
 					</FieldGroup>
 					<hr className={"my-3"} />
-					{fields.length !== 0 && DownloadButton}
-					<Button
-						variant={"outline"}
-						onClick={() => {
-							prepend({
-								name: "",
-								price: 0,
-								count: 1,
-								discount: 0,
-								totalPrice: 0,
-								consumptionTax: {
-									classification: "unknown",
+					{fields.length !== 0 && (
+						<DownloadButton
+							handleDownloadCSV={handleDownloadCSV}
+							handleDownloadJSON={handleDownloadJSON}
+						/>
+					)}
+					<div className={"flex flex-row gap-2"}>
+						<Button
+							variant={"outline"}
+							className={"flex-1"}
+							onClick={() => {
+								prepend({
+									name: "",
 									price: 0,
-								},
-								totalPriceWithTax: 0,
-							});
-						}}
-					>
-						<PlusIcon />
-						追加
-					</Button>
+									count: 1,
+									discount: 0,
+									totalPrice: 0,
+									consumptionTax: {
+										classification: "unknown",
+										price: 0,
+									},
+									totalPriceWithTax: 0,
+								});
+							}}
+						>
+							<PlusIcon />
+							<span>追加</span>
+						</Button>
+						<Button
+							className={"flex-0"}
+							variant={"outline"}
+							onClick={() => {
+								setIsEditing((prev) => !prev);
+							}}
+						>
+							{isEditing ? (
+								<>
+									<CheckIcon />
+									<span>完了</span>
+								</>
+							) : (
+								<>
+									<EditIcon />
+									<span>編集</span>
+								</>
+							)}
+						</Button>
+					</div>
 					{fields.map((field, index) => (
 						<ReceiptForm
 							key={field.id}
 							index={index}
 							control={form.control}
 							onRemove={remove}
+							showRemoveButton={isEditing}
 						/>
 					))}
 					<Button
@@ -353,9 +363,44 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						<PlusIcon />
 						追加
 					</Button>
-					{fields.length !== 0 && DownloadButton}
+					{fields.length !== 0 && (
+						<DownloadButton
+							handleDownloadCSV={handleDownloadCSV}
+							handleDownloadJSON={handleDownloadJSON}
+						/>
+					)}
 				</div>
 			</FieldSet>
 		</form>
+	);
+}
+
+interface DownloadButtonProps {
+	handleDownloadJSON: () => void;
+	handleDownloadCSV: () => void;
+}
+function DownloadButton({
+	handleDownloadCSV,
+	handleDownloadJSON,
+}: DownloadButtonProps): JSX.Element {
+	return (
+		<div className={"flex gap-2"}>
+			<Button
+				type={"button"}
+				onClick={handleDownloadJSON}
+				className={"flex-1"}
+			>
+				<DownloadIcon />
+				JSON ダウンロード
+			</Button>
+			<Button
+				type={"button"}
+				onClick={handleDownloadCSV}
+				className={"flex-1"}
+			>
+				<DownloadIcon />
+				CSV ダウンロード
+			</Button>
+		</div>
 	);
 }

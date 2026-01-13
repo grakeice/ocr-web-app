@@ -3,6 +3,7 @@
 import { type JSX } from "react";
 
 import { Button as BaseButton } from "@base-ui/react/button";
+import clsx from "clsx";
 import {
 	BadgeJapaneseYenIcon,
 	BadgePercentIcon,
@@ -42,20 +43,24 @@ interface ReceiptFormProps {
 	index: number;
 	control: Control<z.infer<typeof receiptSchema>>;
 	onRemove: (index: number) => void;
+	showRemoveButton: boolean;
 }
 export function ReceiptForm({
 	index,
 	control,
 	onRemove,
+	showRemoveButton,
 }: ReceiptFormProps): JSX.Element {
 	const { errors } = useFormState({ control });
 
 	return (
 		<Card className={"group py-3"}>
 			<BaseButton
-				className={
-					"bg-card text-destructive invisible absolute w-fit -translate-x-2 -translate-y-5 cursor-pointer rounded-full opacity-0 transition-all group-hover:visible group-hover:opacity-100"
-				}
+				className={clsx(
+					"bg-card text-destructive absolute w-fit -translate-x-2 -translate-y-5 cursor-pointer rounded-full transition-all group-hover:visible group-hover:opacity-100",
+					showRemoveButton && "visible opacity-100",
+					!showRemoveButton && "invisible opacity-0",
+				)}
 				onClick={() => {
 					onRemove(index);
 				}}
