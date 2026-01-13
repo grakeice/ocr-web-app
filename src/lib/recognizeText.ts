@@ -1,11 +1,6 @@
 "use server";
 
-import { writeFileSync } from "node:fs";
-import path from "node:path";
-import { setTimeout } from "node:timers/promises";
-
 import vision from "@google-cloud/vision";
-import type { google } from "@google-cloud/vision/build/protos/protos";
 
 import { env } from "@/env";
 
