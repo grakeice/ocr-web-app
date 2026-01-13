@@ -1,6 +1,6 @@
 "use client";
 
-import { type JSX } from "react";
+import { type JSX, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -41,6 +41,10 @@ interface ReceiptDataFieldProps {
 	data: z.infer<typeof receiptSchema> | undefined;
 }
 export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
+	const [downloadType, setDownloadType] = useState<"csv" | "json" | null>(
+		null,
+	);
+
 	const form = useForm<z.infer<typeof receiptSchema>>({
 		/** 数値もinputを通すとstringになってしまう問題を解決するために、z.coerceを使っているので一旦unknownに変換している */
 		resolver: zodResolver(receiptSchema) as unknown as Resolver<
@@ -60,8 +64,39 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 	});
 
 	const onSubmit = (data: z.infer<typeof receiptSchema>) => {
-		console.log(data);
-		console.log(JSON.stringify(data));
+		if (downloadType === "csv") {
+			const csv = convertToCSV(data);
+			const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute(
+				"download",
+				`receipt-${new Date().toISOString()}.csv`,
+			);
+			link.style.visibility = "hidden";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			setDownloadType(null);
+		} else if (downloadType === "json") {
+			const json = JSON.stringify(data, null, 2);
+			const blob = new Blob([json], {
+				type: "application/json;charset=utf-8;",
+			});
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute(
+				"download",
+				`receipt-${new Date().toISOString()}.json`,
+			);
+			link.style.visibility = "hidden";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			setDownloadType(null);
+		}
 	};
 
 	const convertToCSV = (data: z.infer<typeof receiptSchema>) => {
@@ -99,34 +134,36 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 	};
 
 	const handleDownloadCSV = () => {
-		const currentData = form.getValues();
-		const csv = convertToCSV(currentData);
-		const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-		const link = document.createElement("a");
-		const url = URL.createObjectURL(blob);
-		link.setAttribute("href", url);
-		link.setAttribute("download", `receipt-${Date.now()}.csv`);
-		link.style.visibility = "hidden";
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+		setDownloadType("csv");
+		form.handleSubmit(onSubmit)();
 	};
 
 	const handleDownloadJSON = () => {
-		const currentData = form.getValues();
-		const json = JSON.stringify(currentData, null, 2);
-		const blob = new Blob([json], {
-			type: "application/json;charset=utf-8;",
-		});
-		const link = document.createElement("a");
-		const url = URL.createObjectURL(blob);
-		link.setAttribute("href", url);
-		link.setAttribute("download", `receipt-${Date.now()}.json`);
-		link.style.visibility = "hidden";
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+		setDownloadType("json");
+		form.handleSubmit(onSubmit)();
 	};
+
+	const DownloadButton = (
+		<div className={"flex gap-2"}>
+			<Button
+				type={"button"}
+				onClick={handleDownloadJSON}
+				className={"flex-1"}
+			>
+				<DownloadIcon />
+				JSON ダウンロード
+			</Button>
+			<Button
+				type={"button"}
+				onClick={handleDownloadCSV}
+				className={"flex-1"}
+			>
+				<DownloadIcon />
+				CSV ダウンロード
+			</Button>
+		</div>
+	);
+
 	return (
 		<form onSubmit={form.handleSubmit(onSubmit)}>
 			<FieldSet>
@@ -267,6 +304,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						/>
 					</FieldGroup>
 					<hr className={"my-3"} />
+					{fields.length !== 0 && DownloadButton}
 					<Button
 						variant={"outline"}
 						onClick={() => {
@@ -315,26 +353,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						<PlusIcon />
 						追加
 					</Button>
-					{fields.length !== 0 && (
-						<div className={"flex gap-2"}>
-							<Button
-								type={"button"}
-								onClick={handleDownloadJSON}
-								className={"flex-1"}
-							>
-								<DownloadIcon />
-								JSON ダウンロード
-							</Button>
-							<Button
-								type={"button"}
-								onClick={handleDownloadCSV}
-								className={"flex-1"}
-							>
-								<DownloadIcon />
-								CSV ダウンロード
-							</Button>
-						</div>
-					)}
+					{fields.length !== 0 && DownloadButton}
 				</div>
 			</FieldSet>
 		</form>

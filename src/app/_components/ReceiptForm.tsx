@@ -348,7 +348,7 @@ export function ReceiptForm({
 								data-invalid={fieldState.invalid}
 							>
 								<FieldLabel htmlFor={field.name}>
-									合計（税込）
+									小計（税込）
 								</FieldLabel>
 								<InputGroup>
 									<InputGroupAddon align={"inline-start"}>
