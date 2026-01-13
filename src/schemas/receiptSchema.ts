@@ -31,7 +31,7 @@ export const receiptSchema = z
 					.number()
 					.int()
 					.describe(
-						"その商品の合計金額(税抜、整数、priceとcountの積からdiscountを引いたもの)",
+						"その商品の税抜小計(整数、priceとcountの積からdiscountを引いたもの)",
 					),
 				consumptionTax: z.object({
 					classification: consumptionTaxClassificationSchema,
@@ -44,7 +44,7 @@ export const receiptSchema = z
 					.number()
 					.int()
 					.describe(
-						"その商品の合計金額(税込、整数, totalPriceにconsumptionTax.priceを足したもの)",
+						"その商品の税込小計(整数, totalPriceにconsumptionTax.priceを足したもの)",
 					),
 			}),
 		),

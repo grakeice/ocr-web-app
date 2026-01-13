@@ -290,12 +290,14 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						<DownloadButton
 							handleDownloadCSV={handleDownloadCSV}
 							handleDownloadJSON={handleDownloadJSON}
+							disabled={isEditing}
 						/>
 					)}
 					<div className={"flex flex-row gap-2"}>
 						<Button
 							variant={"outline"}
 							className={"flex-1"}
+							disabled={isEditing}
 							onClick={() => {
 								prepend({
 									name: "",
@@ -343,30 +345,54 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 							showRemoveButton={isEditing}
 						/>
 					))}
-					<Button
-						variant={"outline"}
-						onClick={() => {
-							append({
-								name: "",
-								price: 0,
-								count: 1,
-								discount: 0,
-								totalPrice: 0,
-								consumptionTax: {
-									classification: "unknown",
+					<div className={"flex flex-row gap-2"}>
+						<Button
+							variant={"outline"}
+							className={"flex-1"}
+							disabled={isEditing}
+							onClick={() => {
+								append({
+									name: "",
 									price: 0,
-								},
-								totalPriceWithTax: 0,
-							});
-						}}
-					>
-						<PlusIcon />
-						追加
-					</Button>
+									count: 1,
+									discount: 0,
+									totalPrice: 0,
+									consumptionTax: {
+										classification: "unknown",
+										price: 0,
+									},
+									totalPriceWithTax: 0,
+								});
+							}}
+						>
+							<PlusIcon />
+							<span>追加</span>
+						</Button>
+						<Button
+							className={"flex-0"}
+							variant={"outline"}
+							onClick={() => {
+								setIsEditing((prev) => !prev);
+							}}
+						>
+							{isEditing ? (
+								<>
+									<CheckIcon />
+									<span>完了</span>
+								</>
+							) : (
+								<>
+									<EditIcon />
+									<span>編集</span>
+								</>
+							)}
+						</Button>
+					</div>
 					{fields.length !== 0 && (
 						<DownloadButton
 							handleDownloadCSV={handleDownloadCSV}
 							handleDownloadJSON={handleDownloadJSON}
+							disabled={isEditing}
 						/>
 					)}
 				</div>
@@ -378,10 +404,12 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 interface DownloadButtonProps {
 	handleDownloadJSON: () => void;
 	handleDownloadCSV: () => void;
+	disabled?: boolean;
 }
 function DownloadButton({
 	handleDownloadCSV,
 	handleDownloadJSON,
+	disabled = false,
 }: DownloadButtonProps): JSX.Element {
 	return (
 		<div className={"flex gap-2"}>
@@ -389,6 +417,7 @@ function DownloadButton({
 				type={"button"}
 				onClick={handleDownloadJSON}
 				className={"flex-1"}
+				disabled={disabled}
 			>
 				<DownloadIcon />
 				JSON ダウンロード
@@ -397,6 +426,7 @@ function DownloadButton({
 				type={"button"}
 				onClick={handleDownloadCSV}
 				className={"flex-1"}
+				disabled={disabled}
 			>
 				<DownloadIcon />
 				CSV ダウンロード

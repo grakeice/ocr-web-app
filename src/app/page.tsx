@@ -85,6 +85,8 @@ export default function Page(): JSX.Element {
 							!isPending && analysisTarget ? "visible" : "hidden"
 						}
 					>
+						<hr />
+						<span className={"font-bold"}>解析結果</span>
 						<ReceiptContainer
 							file={analysisTarget}
 							key={`${analysisTarget?.name}:${analysisTarget?.size}:${analysisTarget?.lastModified}`}
