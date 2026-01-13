@@ -1,8 +1,7 @@
 "use client";
 
-import { type JSX } from "react";
+import { Dispatch, SetStateAction, useState, type JSX } from "react";
 
-import { Button as BaseButton } from "@base-ui/react/button";
 import clsx from "clsx";
 import {
 	BadgeJapaneseYenIcon,
@@ -17,6 +16,7 @@ import {
 import { Controller, useFormState, type Control } from "react-hook-form";
 import { z } from "zod";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
 	Field,
@@ -35,6 +35,13 @@ import {
 	NativeSelectOption,
 } from "@/components/ui/native-select";
 import {
+	Popover,
+	PopoverContent,
+	PopoverHeader,
+	PopoverTitle,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
 	ConsumptionTaxClassification,
 	receiptSchema,
 } from "@/schemas/receiptSchema";
@@ -43,31 +50,63 @@ interface ReceiptFormProps {
 	index: number;
 	control: Control<z.infer<typeof receiptSchema>>;
 	onRemove: (index: number) => void;
-	showRemoveButton: boolean;
+	isFormDisabled: boolean;
+	setIsFormDisabled: Dispatch<SetStateAction<boolean>>;
 }
 export function ReceiptForm({
 	index,
 	control,
 	onRemove,
-	showRemoveButton,
+	isFormDisabled,
 }: ReceiptFormProps): JSX.Element {
 	const { errors } = useFormState({ control });
+	const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
 
 	return (
 		<Card className={"group py-3"}>
-			<BaseButton
-				className={clsx(
-					"bg-card text-destructive absolute w-fit -translate-x-2 -translate-y-5 cursor-pointer rounded-full transition-all group-hover:visible group-hover:opacity-100",
-					showRemoveButton && "visible opacity-100",
-					!showRemoveButton && "invisible opacity-0",
-				)}
-				onClick={() => {
-					onRemove(index);
-				}}
-				aria-description={"削除"}
+			<Popover
+				open={deletePopoverOpen}
+				onOpenChange={setDeletePopoverOpen}
 			>
-				<MinusCircleIcon size={20} />
-			</BaseButton>
+				<PopoverTrigger
+					className={clsx(
+						"bg-card text-destructive absolute w-fit -translate-x-2 -translate-y-5 cursor-pointer rounded-full transition-all group-hover:visible group-hover:opacity-100",
+						isFormDisabled && "visible opacity-100",
+						!isFormDisabled && "invisible opacity-0",
+					)}
+					aria-description={"削除"}
+				>
+					<MinusCircleIcon size={20} />
+				</PopoverTrigger>
+				<PopoverContent side={"inline-end"}>
+					<PopoverHeader className={"text-destructive"}>
+						<PopoverTitle>削除しますか？</PopoverTitle>
+					</PopoverHeader>
+					<div
+						className={
+							"just flex flex-row items-center justify-end gap-2"
+						}
+					>
+						<Button
+							variant={"outline"}
+							onClick={() => {
+								setDeletePopoverOpen(false);
+							}}
+						>
+							キャンセル
+						</Button>
+						<Button
+							variant={"destructive"}
+							onClick={() => {
+								onRemove(index);
+								setDeletePopoverOpen(false);
+							}}
+						>
+							削除
+						</Button>
+					</div>
+				</PopoverContent>
+			</Popover>
 			<CardContent className={"px-3"}>
 				<FieldGroup>
 					<Controller

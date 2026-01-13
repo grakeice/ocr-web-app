@@ -43,10 +43,10 @@ interface ReceiptDataFieldProps {
 	data: z.infer<typeof receiptSchema> | undefined;
 }
 export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
+	const [isFormDisabled, setIsFormDisabled] = useState(false);
 	const [downloadType, setDownloadType] = useState<"csv" | "json" | null>(
 		null,
 	);
-	const [isEditing, setIsEditing] = useState(false);
 
 	const form = useForm<z.infer<typeof receiptSchema>>({
 		/** 数値もinputを通すとstringになってしまう問題を解決するために、z.coerceを使っているので一旦unknownに変換している */
@@ -60,6 +60,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 			consumptionTax: data?.consumptionTax,
 			totalPrice: data?.totalPrice,
 		},
+		disabled: isFormDisabled,
 	});
 	const { fields, remove, append, prepend } = useFieldArray({
 		control: form.control,
@@ -198,6 +199,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 											aria-invalid={fieldState.invalid}
 											placeholder={"---"}
 											autoComplete={"off"}
+											disabled={isFormDisabled}
 											value={format(
 												field.value,
 												"yyyy-MM-dd'T'HH:mm",
@@ -290,14 +292,14 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						<DownloadButton
 							handleDownloadCSV={handleDownloadCSV}
 							handleDownloadJSON={handleDownloadJSON}
-							disabled={isEditing}
+							disabled={isFormDisabled}
 						/>
 					)}
 					<div className={"flex flex-row gap-2"}>
 						<Button
 							variant={"outline"}
 							className={"flex-1"}
-							disabled={isEditing}
+							disabled={isFormDisabled}
 							onClick={() => {
 								prepend({
 									name: "",
@@ -320,10 +322,10 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 							className={"flex-0"}
 							variant={"outline"}
 							onClick={() => {
-								setIsEditing((prev) => !prev);
+								setIsFormDisabled((prev) => !prev);
 							}}
 						>
-							{isEditing ? (
+							{isFormDisabled ? (
 								<>
 									<CheckIcon />
 									<span>完了</span>
@@ -342,14 +344,15 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 							index={index}
 							control={form.control}
 							onRemove={remove}
-							showRemoveButton={isEditing}
+							isFormDisabled={isFormDisabled}
+							setIsFormDisabled={setIsFormDisabled}
 						/>
 					))}
 					<div className={"flex flex-row gap-2"}>
 						<Button
 							variant={"outline"}
 							className={"flex-1"}
-							disabled={isEditing}
+							disabled={isFormDisabled}
 							onClick={() => {
 								append({
 									name: "",
@@ -372,10 +375,10 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 							className={"flex-0"}
 							variant={"outline"}
 							onClick={() => {
-								setIsEditing((prev) => !prev);
+								setIsFormDisabled((prev) => !prev);
 							}}
 						>
-							{isEditing ? (
+							{isFormDisabled ? (
 								<>
 									<CheckIcon />
 									<span>完了</span>
@@ -392,7 +395,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						<DownloadButton
 							handleDownloadCSV={handleDownloadCSV}
 							handleDownloadJSON={handleDownloadJSON}
-							disabled={isEditing}
+							disabled={isFormDisabled}
 						/>
 					)}
 				</div>
