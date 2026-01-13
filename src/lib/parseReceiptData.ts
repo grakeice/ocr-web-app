@@ -15,7 +15,7 @@ export async function parseReceiptData(source: string) {
 
 	console.time("gemini-thinking-time");
 	const response = await ai.models.generateContent({
-		model: "gemini-2.5-flash",
+		model: "gemini-2.0-flash",
 		contents: [
 			"レシートが日本語であれば、レシート内の時間はJSTなので出力する時間をGMTに変換してください。",
 			"個別の商品の価格に消費税が含まれているようであれば、税抜きの価格に直してください。",

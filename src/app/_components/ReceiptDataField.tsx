@@ -55,7 +55,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 		>,
 		defaultValues: {
 			storeName: data?.storeName,
-			date: data?.date,
+			date: new Date(data?.date ?? 0).toISOString(),
 			items: data?.items,
 			consumptionTax: data?.consumptionTax,
 			totalPrice: data?.totalPrice,
