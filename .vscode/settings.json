@@ -1,6 +1,8 @@
 {
 	"cSpell.words": [
+		"aiplatform",
 		"dexie",
+		"genai",
 		"interword",
 		"LSTM",
 		"nonconstructor",

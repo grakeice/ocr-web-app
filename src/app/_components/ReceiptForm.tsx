@@ -2,11 +2,13 @@
 
 import { type JSX } from "react";
 
+import { Button as BaseButton } from "@base-ui/react/button";
 import {
 	BadgeJapaneseYenIcon,
 	BadgePercentIcon,
 	BaggageClaimIcon,
 	EqualIcon,
+	MinusCircleIcon,
 	PlusIcon,
 	TagIcon,
 	XIcon,
@@ -41,12 +43,27 @@ interface ReceiptFormProps {
 	control: Control<z.infer<typeof receiptSchema>>;
 	onRemove: (index: number) => void;
 }
-export function ReceiptForm({ index, control }: ReceiptFormProps): JSX.Element {
+export function ReceiptForm({
+	index,
+	control,
+	onRemove,
+}: ReceiptFormProps): JSX.Element {
 	const { errors } = useFormState({ control });
 
 	return (
-		<Card>
-			<CardContent>
+		<Card className={"group py-3"}>
+			<BaseButton
+				className={
+					"bg-card text-destructive invisible absolute w-fit -translate-x-2 -translate-y-5 cursor-pointer rounded-full opacity-0 transition-all group-hover:visible group-hover:opacity-100"
+				}
+				onClick={() => {
+					onRemove(index);
+				}}
+				aria-description={"削除"}
+			>
+				<MinusCircleIcon size={20} />
+			</BaseButton>
+			<CardContent className={"px-3"}>
 				<FieldGroup>
 					<Controller
 						name={`items.${index}.name`}

@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import {
 	BadgePercentIcon,
 	CalendarDaysIcon,
+	PlusIcon,
 	ReceiptJapaneseYenIcon,
 	StoreIcon,
 } from "lucide-react";
@@ -52,7 +53,7 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 			totalPrice: data?.totalPrice,
 		},
 	});
-	const { fields, remove } = useFieldArray({
+	const { fields, remove, append, prepend } = useFieldArray({
 		control: form.control,
 		name: "items",
 	});
@@ -202,6 +203,26 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						/>
 					</FieldGroup>
 					<hr className={"my-3"} />
+					<Button
+						variant={"outline"}
+						onClick={() => {
+							prepend({
+								name: "",
+								price: 0,
+								count: 1,
+								discount: 0,
+								totalPrice: 0,
+								consumptionTax: {
+									classification: "unknown",
+									price: 0,
+								},
+								totalPriceWithTax: 0,
+							});
+						}}
+					>
+						<PlusIcon />
+						追加
+					</Button>
 					{fields.map((field, index) => (
 						<ReceiptForm
 							key={field.id}
@@ -210,6 +231,26 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 							onRemove={remove}
 						/>
 					))}
+					<Button
+						variant={"outline"}
+						onClick={() => {
+							append({
+								name: "",
+								price: 0,
+								count: 1,
+								discount: 0,
+								totalPrice: 0,
+								consumptionTax: {
+									classification: "unknown",
+									price: 0,
+								},
+								totalPriceWithTax: 0,
+							});
+						}}
+					>
+						<PlusIcon />
+						追加
+					</Button>
 					{fields.length !== 0 && (
 						<Button type={"submit"} className={"w-full"}>
 							保存する
