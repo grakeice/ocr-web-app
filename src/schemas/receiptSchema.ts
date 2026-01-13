@@ -66,15 +66,10 @@ export const receiptSchema = z
 		);
 		console.log(calculatedTotalPrice === data.totalPrice);
 		if (calculatedTotalPrice !== data.totalPrice) {
-			if (
-				calculatedTotalPrice !==
-				data.totalPrice - data.consumptionTax
-			) {
-				ctx.addIssue({
-					code: "custom",
-					message: `算出された商品の合計額（${calculatedTotalPrice}円）と入力された値とが一致しませんでした。差額は ${calculatedTotalPrice - data.totalPrice} 円です。情報を修正するか、金額調整のための項目を追加してください。Tips: 差額が大きい場合、一個あたりの値段が税込になっている可能性があります。`,
-					path: ["totalPrice"],
-				});
-			}
+			ctx.addIssue({
+				code: "custom",
+				message: `算出された商品の合計額（${calculatedTotalPrice}円）と入力された値とが一致しませんでした。差額は ${calculatedTotalPrice - data.totalPrice} 円です。情報を修正するか、金額調整のための項目を追加してください。Tips: 差額が大きい場合、一個あたりの値段が税込になっている可能性があります。`,
+				path: ["totalPrice"],
+			});
 		}
 	});
