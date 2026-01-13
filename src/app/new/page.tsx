@@ -39,7 +39,7 @@ export default function Page(): JSX.Element {
 	const [analysisTarget, setAnalysisTarget] = useState<File>();
 
 	return (
-		<div className={"mx-2 mt-4 max-w-100 md:mx-auto"}>
+		<div className={"mx-auto mt-4 max-w-100 px-2"}>
 			<div className={"flex flex-col gap-4"}>
 				<ImageInput
 					type={"file"}
