@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import {
 	BadgePercentIcon,
 	CalendarDaysIcon,
+	DownloadIcon,
 	PlusIcon,
 	ReceiptJapaneseYenIcon,
 	StoreIcon,
@@ -59,10 +60,73 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 	});
 
 	const onSubmit = (data: z.infer<typeof receiptSchema>) => {
-		console.log(form.formState.errors);
 		console.log(data);
+		console.log(JSON.stringify(data));
 	};
 
+	const convertToCSV = (data: z.infer<typeof receiptSchema>) => {
+		const storeName = data.storeName;
+		const dateStr = format(new Date(data.date), "yyyy-MM-dd HH:mm");
+
+		const headers = [
+			"店名",
+			"日時",
+			"商品名",
+			"単価",
+			"数量",
+			"割引",
+			"小計",
+			"消費税分類",
+			"消費税額",
+			"税込小計",
+		];
+		const rows = data.items.map((item) => [
+			storeName,
+			dateStr,
+			item.name,
+			item.price,
+			item.count,
+			item.discount,
+			item.totalPrice,
+			item.consumptionTax.classification,
+			item.consumptionTax.price,
+			item.totalPriceWithTax,
+		]);
+
+		const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
+
+		return csv;
+	};
+
+	const handleDownloadCSV = () => {
+		const currentData = form.getValues();
+		const csv = convertToCSV(currentData);
+		const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+		const link = document.createElement("a");
+		const url = URL.createObjectURL(blob);
+		link.setAttribute("href", url);
+		link.setAttribute("download", `receipt-${Date.now()}.csv`);
+		link.style.visibility = "hidden";
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
+
+	const handleDownloadJSON = () => {
+		const currentData = form.getValues();
+		const json = JSON.stringify(currentData, null, 2);
+		const blob = new Blob([json], {
+			type: "application/json;charset=utf-8;",
+		});
+		const link = document.createElement("a");
+		const url = URL.createObjectURL(blob);
+		link.setAttribute("href", url);
+		link.setAttribute("download", `receipt-${Date.now()}.json`);
+		link.style.visibility = "hidden";
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	};
 	return (
 		<form onSubmit={form.handleSubmit(onSubmit)}>
 			<FieldSet>
@@ -252,9 +316,24 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						追加
 					</Button>
 					{fields.length !== 0 && (
-						<Button type={"submit"} className={"w-full"}>
-							保存する
-						</Button>
+						<div className={"flex gap-2"}>
+							<Button
+								type={"button"}
+								onClick={handleDownloadJSON}
+								className={"flex-1"}
+							>
+								<DownloadIcon />
+								JSON ダウンロード
+							</Button>
+							<Button
+								type={"button"}
+								onClick={handleDownloadCSV}
+								className={"flex-1"}
+							>
+								<DownloadIcon />
+								CSV ダウンロード
+							</Button>
+						</div>
 					)}
 				</div>
 			</FieldSet>
