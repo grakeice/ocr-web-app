@@ -32,12 +32,12 @@ function ReceiptContainer({
 	highPrecisionMode = false,
 }: ReceiptContainerProps): JSX.Element {
 	const client = hc<AppType>("/");
-	const fetcher = async (args: typeof file) => {
-		if (!args) return;
+	const fetcher = async (args: [typeof file, typeof highPrecisionMode]) => {
+		if (!args[0]) return;
 		const res = await client.api.parse.$post({
 			form: {
-				file: args,
-				highPrecisionMode: highPrecisionMode.toString(),
+				file: args[0],
+				highPrecisionMode: args[1].toString(),
 			},
 		});
 		if (res.ok) return await res.json();
@@ -45,7 +45,7 @@ function ReceiptContainer({
 
 	const receiptData = useSWR(
 		file ? [file, count, highPrecisionMode] : null,
-		(args) => fetcher(args[0]),
+		(args) => fetcher([args[0], args[2]]),
 		{
 			suspense: true,
 		},
@@ -134,7 +134,7 @@ export default function Page(): JSX.Element {
 										setRequestCount((prev) => prev + 1);
 									});
 								}}
-								aria-label={"再読み込み"}
+								title={"再読み込み"}
 							>
 								<RotateCwIcon />
 							</Button>
