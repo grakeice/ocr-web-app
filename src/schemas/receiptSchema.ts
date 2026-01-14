@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { formatNumberWithCommas } from "@/lib/utils";
+
 const consumptionTaxClassificationSchema = z
 	.enum(["10%", "8%", "exempted", "free", "unknown"])
 	.describe("消費税の区分。exemptedは非課税、freeは免税");
@@ -70,7 +72,7 @@ export const receiptSchema = z
 		if (calculatedTotalPrice !== data.totalPrice) {
 			ctx.addIssue({
 				code: "custom",
-				message: `算出された商品の合計額（${calculatedTotalPrice}円）と入力された値とが一致しませんでした。差額は ${data.totalPrice - calculatedTotalPrice} 円です。情報を修正するか、金額調整のための項目を追加してください。Tips: 差額が大きい場合、含まれていない商品があるか、一個あたりの値段が税込になっている可能性があります。`,
+				message: `算出された商品の合計額（${formatNumberWithCommas(calculatedTotalPrice)} 円）と入力された値とが一致しませんでした。差額は ${formatNumberWithCommas(data.totalPrice - calculatedTotalPrice)} 円です。情報を修正するか、金額調整のための項目を追加してください。Tips: 差額が大きい場合、含まれていない商品があるか、一個あたりの値段が税込になっている可能性があります。`,
 				path: ["totalPrice"],
 			});
 		}
