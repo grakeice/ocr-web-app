@@ -15,7 +15,6 @@
 - **フロントエンド**: Next.js (App Router), React, TypeScript
 - **UI**: shadcn/ui, Tailwind CSS
 - **フォーム**: React Hook Form, Zod
-- **テスト**: Vitest, Storybook
 - **OCR**:
     - Google Cloud Vision API
     - Tesseract.js
