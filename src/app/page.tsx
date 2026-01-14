@@ -3,6 +3,7 @@
 import { Activity, Suspense, useState, useTransition, type JSX } from "react";
 
 import { hc } from "hono/client";
+import { RotateCwIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import useSWR from "swr/immutable";
 
@@ -13,10 +14,14 @@ import { ImageInput } from "@/stories/ImageInput";
 import { ReceiptDataField } from "./_components/ReceiptDataField";
 import type { AppType } from "./api/[[...route]]/route";
 
-interface ReceiptProps {
+interface ReceiptContainerProps {
+	count?: number;
 	file: File | undefined;
 }
-function ReceiptContainer({ file }: ReceiptProps): JSX.Element {
+function ReceiptContainer({
+	file,
+	count = 0,
+}: ReceiptContainerProps): JSX.Element {
 	const client = hc<AppType>("/");
 	const fetcher = async (args: typeof file) => {
 		if (!args) return;
@@ -26,9 +31,13 @@ function ReceiptContainer({ file }: ReceiptProps): JSX.Element {
 		if (res.ok) return await res.json();
 	};
 
-	const receiptData = useSWR(file ? file : null, fetcher, {
-		suspense: true,
-	});
+	const receiptData = useSWR(
+		file ? [file, count] : null,
+		(args) => fetcher(args[0]),
+		{
+			suspense: true,
+		},
+	);
 
 	return <ReceiptDataField data={receiptData.data} />;
 }
@@ -37,6 +46,7 @@ export default function Page(): JSX.Element {
 	const [file, setFile] = useState<File>();
 	const [isPending, startTransition] = useTransition();
 	const [analysisTarget, setAnalysisTarget] = useState<File>();
+	const [requestCount, setRequestCount] = useState(0);
 
 	return (
 		<div className={"mx-auto mt-4 max-w-100 px-2"}>
@@ -52,33 +62,65 @@ export default function Page(): JSX.Element {
 						setFile(file);
 					}}
 				/>
-				<Button
-					type={"submit"}
-					className={"w-full"}
-					disabled={isPending || !file}
-					onClick={() => {
-						startTransition(() => {
-							setAnalysisTarget(file);
-						});
-					}}
-				>
-					<AnimatePresence>
-						<motion.span key={"description"} layout>
-							読み込む
-						</motion.span>
-						{isPending && (
-							<motion.span
-								key={"spinner"}
-								layout
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
+				<div className={"flex w-full flex-row gap-2"}>
+					<motion.div layout style={{ flex: 1 }}>
+						<Button
+							className={"w-full"}
+							disabled={isPending || !file}
+							onClick={() => {
+								startTransition(() => {
+									setAnalysisTarget(file);
+									setRequestCount((prev) => {
+										if (prev === 0) return 1;
+										else return prev;
+									});
+								});
+							}}
+						>
+							<AnimatePresence>
+								<motion.span
+									key={"button.load.description"}
+									layout
+								>
+									読み込む
+								</motion.span>
+								{isPending && (
+									<motion.span
+										key={"button.load.spinner"}
+										layout
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										exit={{ opacity: 0 }}
+									>
+										<Spinner />
+									</motion.span>
+								)}
+							</AnimatePresence>
+						</Button>
+					</motion.div>
+					{!isPending && analysisTarget && (
+						<motion.div
+							layout
+							style={{ flex: 0 }}
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							key={"button.reload"}
+						>
+							<Button
+								className={"w-full"}
+								onClick={() => {
+									startTransition(() => {
+										setRequestCount((prev) => prev + 1);
+									});
+								}}
+								aria-label={"再読み込み"}
 							>
-								<Spinner />
-							</motion.span>
-						)}
-					</AnimatePresence>
-				</Button>
+								<RotateCwIcon />
+							</Button>
+						</motion.div>
+					)}
+				</div>
 				<Suspense fallback={<Spinner />}>
 					<Activity
 						mode={
@@ -89,7 +131,8 @@ export default function Page(): JSX.Element {
 						<span className={"font-bold"}>解析結果</span>
 						<ReceiptContainer
 							file={analysisTarget}
-							key={`${analysisTarget?.name}:${analysisTarget?.size}:${analysisTarget?.lastModified}`}
+							key={`${analysisTarget?.name}:${analysisTarget?.size}:${analysisTarget?.lastModified}:${requestCount}`}
+							count={requestCount}
 						/>
 					</Activity>
 				</Suspense>
