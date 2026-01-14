@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ImageInput } from "@/stories/ImageInput";
 
-import { ReceiptDataField } from "./_components/ReceiptDataField";
+import { ReceiptForm } from "./_components/ReceiptForm";
 import type { AppType } from "./api/[[...route]]/route";
 
 interface ReceiptContainerProps {
@@ -51,7 +51,7 @@ function ReceiptContainer({
 		},
 	);
 
-	return <ReceiptDataField data={receiptData.data} />;
+	return <ReceiptForm data={receiptData.data} />;
 }
 
 export default function Page(): JSX.Element {

@@ -102,7 +102,7 @@ pnpm dev
         - `page.tsx`: トップページのコンポーネント
         - `globals.css`: グローバルなスタイルシート
         - **`/src/app/_components`**: ページ固有のコンポーネント
-            - `ReceiptDataField.tsx`: レシートデータのフィールドを表示するコンポーネント
+            - `ReceiptFormItem.tsx`: 商品の情報を表示するコンポーネント
             - `ReceiptForm.tsx`: レシート情報を表示・編集するフォーム
         - **`/src/app/api`**: APIルート
             - `[[...route]]/route.ts`: Honoを使ったAPIエンドポイント

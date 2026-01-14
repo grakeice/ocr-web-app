@@ -1,241 +1,231 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState, type JSX } from "react";
+import { type JSX, useState } from "react";
 
-import clsx from "clsx";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import {
-	BadgeJapaneseYenIcon,
 	BadgePercentIcon,
-	BaggageClaimIcon,
-	EqualIcon,
-	MinusCircleIcon,
+	CalendarDaysIcon,
+	CheckIcon,
+	DownloadIcon,
+	EditIcon,
 	PlusIcon,
-	TagIcon,
-	XIcon,
+	ReceiptJapaneseYenIcon,
+	StoreIcon,
 } from "lucide-react";
-import { Controller, useFormState, type Control } from "react-hook-form";
-import { z } from "zod";
+import {
+	Controller,
+	useFieldArray,
+	useForm,
+	type Resolver,
+} from "react-hook-form";
+import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
 	Field,
 	FieldError,
 	FieldGroup,
 	FieldLabel,
+	FieldSet,
 } from "@/components/ui/field";
 import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import {
-	NativeSelect,
-	NativeSelectOptGroup,
-	NativeSelectOption,
-} from "@/components/ui/native-select";
-import {
-	Popover,
-	PopoverContent,
-	PopoverHeader,
-	PopoverTitle,
-	PopoverTrigger,
-} from "@/components/ui/popover";
 import { useNumericInput } from "@/hooks/useNumericInput";
-import {
-	ConsumptionTaxClassification,
-	receiptSchema,
-} from "@/schemas/receiptSchema";
+import { receiptSchema } from "@/schemas/receiptSchema";
 
-interface ReceiptFormProps {
-	index: number;
-	control: Control<z.infer<typeof receiptSchema>>;
-	onRemove: (index: number) => void;
-	isFormDisabled: boolean;
-	setIsFormDisabled: Dispatch<SetStateAction<boolean>>;
+import { ReceiptFormItem } from "./ReceiptFormItem";
+
+interface ReceiptDataFieldProps {
+	data: z.infer<typeof receiptSchema> | undefined;
 }
-export function ReceiptForm({
-	index,
-	control,
-	onRemove,
-	isFormDisabled,
-}: ReceiptFormProps): JSX.Element {
-	const { errors } = useFormState({ control });
-	const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
+export function ReceiptForm({ data }: ReceiptDataFieldProps): JSX.Element {
+	const [isFormDisabled, setIsFormDisabled] = useState(false);
+	const [downloadType, setDownloadType] = useState<"csv" | "json" | null>(
+		null,
+	);
+
+	const form = useForm<z.infer<typeof receiptSchema>>({
+		/** 数値もinputを通すとstringになってしまう問題を解決するために、z.coerceを使っているので一旦unknownに変換している */
+		resolver: zodResolver(receiptSchema) as unknown as Resolver<
+			z.infer<typeof receiptSchema>
+		>,
+		defaultValues: {
+			storeName: data?.storeName,
+			date: new Date(data?.date ?? 0).toISOString(),
+			items: data?.items,
+			consumptionTax: data?.consumptionTax,
+			totalPrice: data?.totalPrice,
+		},
+		disabled: isFormDisabled,
+	});
+	const { fields, remove, append, prepend } = useFieldArray({
+		control: form.control,
+		name: "items",
+	});
+
+	const onSubmit = (data: z.infer<typeof receiptSchema>) => {
+		if (downloadType === "csv") {
+			const csv = convertToCSV(data);
+			const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute(
+				"download",
+				`receipt-${new Date().toISOString()}.csv`,
+			);
+			link.style.visibility = "hidden";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			setDownloadType(null);
+		} else if (downloadType === "json") {
+			const json = JSON.stringify(data, null, 2);
+			const blob = new Blob([json], {
+				type: "application/json;charset=utf-8;",
+			});
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute(
+				"download",
+				`receipt-${new Date().toISOString()}.json`,
+			);
+			link.style.visibility = "hidden";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			setDownloadType(null);
+		}
+	};
+
+	const convertToCSV = (data: z.infer<typeof receiptSchema>) => {
+		const storeName = data.storeName;
+		const dateStr = format(new Date(data.date), "yyyy-MM-dd HH:mm");
+
+		const headers = [
+			"店名",
+			"日時",
+			"商品名",
+			"単価",
+			"数量",
+			"割引",
+			"小計",
+			"消費税分類",
+			"消費税額",
+			"税込小計",
+		];
+		const rows = data.items.map((item) => [
+			storeName,
+			dateStr,
+			item.name,
+			item.price,
+			item.count,
+			item.discount,
+			item.totalPrice,
+			item.consumptionTax.classification,
+			item.consumptionTax.price,
+			item.totalPriceWithTax,
+		]);
+
+		const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
+
+		return csv;
+	};
+
+	const handleDownloadCSV = () => {
+		setDownloadType("csv");
+		form.handleSubmit(onSubmit)();
+	};
+
+	const handleDownloadJSON = () => {
+		setDownloadType("json");
+		form.handleSubmit(onSubmit)();
+	};
 
 	return (
-		<Card className={"group py-3"}>
-			<Popover
-				open={deletePopoverOpen}
-				onOpenChange={setDeletePopoverOpen}
-			>
-				<PopoverTrigger
-					className={clsx(
-						"bg-card text-destructive absolute w-fit -translate-x-2 -translate-y-5 cursor-pointer rounded-full transition-all group-hover:visible group-hover:opacity-100",
-						isFormDisabled && "visible opacity-100",
-						!isFormDisabled && "invisible opacity-0",
-					)}
-					aria-description={"削除"}
-				>
-					<MinusCircleIcon size={20} />
-				</PopoverTrigger>
-				<PopoverContent side={"inline-end"}>
-					<PopoverHeader className={"text-destructive"}>
-						<PopoverTitle>削除しますか？</PopoverTitle>
-					</PopoverHeader>
-					<div
-						className={
-							"just flex flex-row items-center justify-end gap-2"
-						}
-					>
-						<Button
-							variant={"outline"}
-							onClick={() => {
-								setDeletePopoverOpen(false);
-							}}
-						>
-							キャンセル
-						</Button>
-						<Button
-							variant={"destructive"}
-							onClick={() => {
-								onRemove(index);
-								setDeletePopoverOpen(false);
-							}}
-						>
-							削除
-						</Button>
-					</div>
-				</PopoverContent>
-			</Popover>
-			<CardContent className={"px-3"}>
-				<FieldGroup>
-					<Controller
-						name={`items.${index}.name`}
-						control={control}
-						render={({ field, fieldState }) => (
-							<Field data-invalid={fieldState.invalid}>
-								<FieldLabel htmlFor={field.name}>
-									商品名
-								</FieldLabel>
-								<InputGroup>
-									<InputGroupAddon>
-										<TagIcon />
-									</InputGroupAddon>
-									<InputGroupInput
-										{...field}
-										id={field.name}
-										aria-invalid={fieldState.invalid}
-										placeholder={"---"}
-										autoComplete={"off"}
-									/>
-								</InputGroup>
-								{fieldState.invalid && (
-									<FieldError errors={[fieldState.error]} />
-								)}
-							</Field>
-						)}
-					/>
-					<Field
-						className={"box-border rounded-lg border p-3 shadow-xs"}
-					>
-						<div className={"flex flex-row items-center gap-1"}>
-							<Controller
-								name={`items.${index}.price`}
-								control={control}
-								render={({ field, fieldState }) => {
-									const inputProps = useNumericInput({
-										field,
-									});
-									return (
-										<Field
-											className={"flex-5"}
-											data-invalid={fieldState.invalid}
-										>
-											<FieldLabel htmlFor={field.name}>
-												一個あたりの値段（税抜）
-											</FieldLabel>
-											<InputGroup>
-												<InputGroupAddon
-													align={"inline-start"}
-												>
-													<BadgeJapaneseYenIcon />
-												</InputGroupAddon>
-												<InputGroupInput
-													{...field}
-													{...inputProps}
-													id={field.name}
-													aria-invalid={
-														fieldState.invalid
-													}
-													type={"text"}
-													placeholder={"---"}
-													autoComplete={"off"}
-												/>
-												<InputGroupAddon
-													align={"inline-end"}
-												>
-													<span>円</span>
-												</InputGroupAddon>
-											</InputGroup>
-										</Field>
-									);
-								}}
-							/>
-							<div>
-								<XIcon
-									className={"translate-y-4 text-gray-500"}
-								/>
-							</div>
-							<Controller
-								name={`items.${index}.count`}
-								control={control}
-								render={({ field, fieldState }) => (
-									<Field
-										className={"flex-2"}
-										data-invalid={fieldState.invalid}
-									>
-										<FieldLabel htmlFor={field.name}>
-											個数
-										</FieldLabel>
-										<InputGroup>
-											<InputGroupAddon
-												align={"inline-start"}
-											>
-												<BaggageClaimIcon />
-											</InputGroupAddon>
-											<InputGroupInput
-												{...field}
-												id={field.name}
-												aria-invalid={
-													fieldState.invalid
-												}
-												type={"number"}
-												placeholder={"---"}
-												autoComplete={"off"}
-											/>
-											<InputGroupAddon
-												align={"inline-end"}
-											>
-												<span>個</span>
-											</InputGroupAddon>
-										</InputGroup>
-									</Field>
-								)}
-							/>
-						</div>
-						{(errors.items?.[index]?.price ||
-							errors.items?.[index]?.count) && (
-							<FieldError
-								errors={[
-									errors.items[index]?.price,
-									errors.items[index]?.count,
-								]}
-							/>
-						)}
+		<form onSubmit={form.handleSubmit(onSubmit)}>
+			<FieldSet>
+				<div className={"my-4 flex flex-col gap-4"}>
+					<FieldGroup>
 						<Controller
-							name={`items.${index}.discount`}
-							control={control}
+							name={"storeName"}
+							control={form.control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>
+										店名
+									</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon>
+											<StoreIcon />
+										</InputGroupAddon>
+										<InputGroupInput
+											{...field}
+											id={field.name}
+											aria-invalid={fieldState.invalid}
+											placeholder={"---"}
+											autoComplete={"off"}
+										/>
+									</InputGroup>
+									{fieldState.invalid && (
+										<FieldError
+											errors={[fieldState.error]}
+										/>
+									)}
+								</Field>
+							)}
+						/>
+						<Controller
+							name={"date"}
+							control={form.control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor={field.name}>
+										日時
+									</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon>
+											<CalendarDaysIcon />
+										</InputGroupAddon>
+										<input {...field} hidden />
+										<InputGroupInput
+											id={field.name}
+											type={"datetime-local"}
+											aria-invalid={fieldState.invalid}
+											placeholder={"---"}
+											autoComplete={"off"}
+											disabled={isFormDisabled}
+											value={format(
+												field.value,
+												"yyyy-MM-dd'T'HH:mm",
+											)}
+											onChange={(e) => {
+												form.setValue(
+													"date",
+													new Date(
+														e.target.value,
+													).toISOString(),
+												);
+											}}
+										/>
+									</InputGroup>
+									{fieldState.invalid && (
+										<FieldError
+											errors={[fieldState.error]}
+										/>
+									)}
+								</Field>
+							)}
+						/>
+						<Controller
+							name={"consumptionTax"}
+							control={form.control}
 							render={({ field, fieldState }) => {
 								const inputProps = useNumericInput({
 									field,
@@ -243,23 +233,24 @@ export function ReceiptForm({
 								return (
 									<Field data-invalid={fieldState.invalid}>
 										<FieldLabel htmlFor={field.name}>
-											値引き額
+											消費税額
 										</FieldLabel>
 										<InputGroup>
 											<InputGroupAddon
 												align={"inline-start"}
 											>
-												値引き
+												<BadgePercentIcon />
 											</InputGroupAddon>
 											<InputGroupInput
 												{...field}
 												{...inputProps}
+												type={"text"}
 												id={field.name}
 												aria-invalid={
 													fieldState.invalid
 												}
-												type={"text"}
 												placeholder={"---"}
+												autoComplete={"off"}
 											/>
 											<InputGroupAddon
 												align={"inline-end"}
@@ -276,180 +267,199 @@ export function ReceiptForm({
 								);
 							}}
 						/>
-					</Field>
-					<div className={"-my-4 flex items-center justify-center"}>
-						<PlusIcon className={"text-gray-500"} />
-					</div>
-					<Field
-						className={"box-border rounded-lg border p-3 shadow-xs"}
-					>
-						<div className={"flex flex-row items-center gap-1"}>
-							<Controller
-								name={`items.${index}.consumptionTax.classification`}
-								control={control}
-								render={({ field, fieldState }) => (
-									<Field
-										data-invalid={fieldState.invalid}
-										className={"flex-1"}
-									>
+						<Controller
+							name={"totalPrice"}
+							control={form.control}
+							render={({ field, fieldState }) => {
+								const inputProps = useNumericInput({
+									field,
+									allowDecimals: false,
+								});
+								return (
+									<Field data-invalid={fieldState.invalid}>
 										<FieldLabel htmlFor={field.name}>
-											税区分
+											総額
 										</FieldLabel>
-										<NativeSelect
-											{...field}
-											id={field.name}
-											aria-invalid={fieldState.invalid}
-											onChange={field.onChange}
-										>
-											<NativeSelectOptGroup
-												label={"税率"}
+										<InputGroup>
+											<InputGroupAddon
+												align={"inline-start"}
 											>
-												<NativeSelectOption
-													value={
-														ConsumptionTaxClassification[
-															"10%"
-														]
-													}
-												>
-													10%
-												</NativeSelectOption>
-												<NativeSelectOption
-													value={
-														ConsumptionTaxClassification[
-															"8%"
-														]
-													}
-												>
-													8%
-												</NativeSelectOption>
-											</NativeSelectOptGroup>
-											<hr />
-											<NativeSelectOptGroup
-												label={"その他"}
+												<ReceiptJapaneseYenIcon />
+											</InputGroupAddon>
+											<InputGroupInput
+												{...field}
+												{...inputProps}
+												type={"text"}
+												id={field.name}
+												aria-invalid={
+													fieldState.invalid
+												}
+												placeholder={"---"}
+												autoComplete={"off"}
+											/>
+											<InputGroupAddon
+												align={"inline-end"}
 											>
-												<NativeSelectOption
-													value={
-														ConsumptionTaxClassification.exempted
-													}
-												>
-													非課税
-												</NativeSelectOption>
-												<NativeSelectOption
-													value={
-														ConsumptionTaxClassification.free
-													}
-												>
-													免税
-												</NativeSelectOption>
-												<NativeSelectOption
-													value={
-														ConsumptionTaxClassification.unknown
-													}
-												>
-													不明
-												</NativeSelectOption>
-											</NativeSelectOptGroup>
-										</NativeSelect>
+												<span>円</span>
+											</InputGroupAddon>
+										</InputGroup>
+										{fieldState.invalid && (
+											<FieldError
+												errors={[fieldState.error]}
+											/>
+										)}
 									</Field>
-								)}
-							/>
-							<Controller
-								name={`items.${index}.consumptionTax.price`}
-								control={control}
-								render={({ field, fieldState }) => {
-									const inputProps = useNumericInput({
-										field,
-									});
-									return (
-										<Field
-											data-invalid={fieldState.invalid}
-											className={"flex-2"}
-										>
-											<FieldLabel htmlFor={field.name}>
-												税額
-											</FieldLabel>
-											<InputGroup>
-												<InputGroupAddon
-													align={"inline-start"}
-												>
-													<BadgePercentIcon />
-												</InputGroupAddon>
-												<InputGroupInput
-													{...field}
-													{...inputProps}
-													id={field.name}
-													aria-invalid={
-														fieldState.invalid
-													}
-													type={"text"}
-													placeholder={"---"}
-												/>
-												<InputGroupAddon
-													align={"inline-end"}
-												>
-													円
-												</InputGroupAddon>
-											</InputGroup>
-										</Field>
-									);
-								}}
-							/>
-						</div>
-						{errors.items?.[index]?.consumptionTax && (
-							<FieldError
-								errors={[
-									errors.items[index].consumptionTax
-										?.classification,
-									errors.items[index].consumptionTax?.price,
-								]}
-							/>
-						)}
-					</Field>
-					<div className={"-my-4 flex items-center justify-center"}>
-						<EqualIcon className={"rotate-90 text-gray-500"} />
+								);
+							}}
+						/>
+					</FieldGroup>
+					<hr className={"my-3"} />
+					{fields.length !== 0 && (
+						<DownloadButton
+							handleDownloadCSV={handleDownloadCSV}
+							handleDownloadJSON={handleDownloadJSON}
+							disabled={isFormDisabled}
+						/>
+					)}
+					<div className={"flex flex-row gap-2"}>
+						<Button
+							variant={"outline"}
+							className={"flex-1"}
+							disabled={isFormDisabled}
+							onClick={() => {
+								prepend({
+									name: "",
+									price: 0,
+									count: 1,
+									discount: 0,
+									totalPrice: 0,
+									consumptionTax: {
+										classification: "unknown",
+										price: 0,
+									},
+									totalPriceWithTax: 0,
+								});
+							}}
+						>
+							<PlusIcon />
+							<span>追加</span>
+						</Button>
+						<Button
+							className={"flex-0"}
+							variant={"outline"}
+							onClick={() => {
+								setIsFormDisabled((prev) => !prev);
+							}}
+						>
+							{isFormDisabled ? (
+								<>
+									<CheckIcon />
+									<span>完了</span>
+								</>
+							) : (
+								<>
+									<EditIcon />
+									<span>編集</span>
+								</>
+							)}
+						</Button>
 					</div>
-					<Controller
-						name={`items.${index}.totalPriceWithTax`}
-						control={control}
-						render={({ field, fieldState }) => {
-							const inputProps = useNumericInput({
-								field,
-							});
-							return (
-								<Field
-									className={"-mt-4"}
-									data-invalid={fieldState.invalid}
-								>
-									<FieldLabel htmlFor={field.name}>
-										小計（税込）
-									</FieldLabel>
-									<InputGroup>
-										<InputGroupAddon align={"inline-start"}>
-											<BadgeJapaneseYenIcon />
-										</InputGroupAddon>
-										<InputGroupInput
-											{...field}
-											{...inputProps}
-											id={field.name}
-											aria-invalid={fieldState.invalid}
-											type={"text"}
-											placeholder={"---"}
-										/>
-										<InputGroupAddon align={"inline-end"}>
-											<span>円</span>
-										</InputGroupAddon>
-									</InputGroup>
-									{fieldState.invalid && (
-										<FieldError
-											errors={[fieldState.error]}
-										/>
-									)}
-								</Field>
-							);
-						}}
-					/>
-				</FieldGroup>
-			</CardContent>
-		</Card>
+					{fields.map((field, index) => (
+						<ReceiptFormItem
+							key={field.id}
+							index={index}
+							control={form.control}
+							onRemove={remove}
+							isFormDisabled={isFormDisabled}
+							setIsFormDisabled={setIsFormDisabled}
+						/>
+					))}
+					<div className={"flex flex-row gap-2"}>
+						<Button
+							variant={"outline"}
+							className={"flex-1"}
+							disabled={isFormDisabled}
+							onClick={() => {
+								append({
+									name: "",
+									price: 0,
+									count: 1,
+									discount: 0,
+									totalPrice: 0,
+									consumptionTax: {
+										classification: "unknown",
+										price: 0,
+									},
+									totalPriceWithTax: 0,
+								});
+							}}
+						>
+							<PlusIcon />
+							<span>追加</span>
+						</Button>
+						<Button
+							className={"flex-0"}
+							variant={"outline"}
+							onClick={() => {
+								setIsFormDisabled((prev) => !prev);
+							}}
+						>
+							{isFormDisabled ? (
+								<>
+									<CheckIcon />
+									<span>完了</span>
+								</>
+							) : (
+								<>
+									<EditIcon />
+									<span>編集</span>
+								</>
+							)}
+						</Button>
+					</div>
+					{fields.length !== 0 && (
+						<DownloadButton
+							handleDownloadCSV={handleDownloadCSV}
+							handleDownloadJSON={handleDownloadJSON}
+							disabled={isFormDisabled}
+						/>
+					)}
+				</div>
+			</FieldSet>
+		</form>
+	);
+}
+
+interface DownloadButtonProps {
+	handleDownloadJSON: () => void;
+	handleDownloadCSV: () => void;
+	disabled?: boolean;
+}
+function DownloadButton({
+	handleDownloadCSV,
+	handleDownloadJSON,
+	disabled = false,
+}: DownloadButtonProps): JSX.Element {
+	return (
+		<div className={"flex gap-2"}>
+			<Button
+				type={"button"}
+				onClick={handleDownloadJSON}
+				className={"flex-1"}
+				disabled={disabled}
+			>
+				<DownloadIcon />
+				JSON ダウンロード
+			</Button>
+			<Button
+				type={"button"}
+				onClick={handleDownloadCSV}
+				className={"flex-1"}
+				disabled={disabled}
+			>
+				<DownloadIcon />
+				CSV ダウンロード
+			</Button>
+		</div>
 	);
 }

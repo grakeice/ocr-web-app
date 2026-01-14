@@ -68,7 +68,7 @@ export const receiptSchema = z
 			(sum, item) => sum + item.totalPriceWithTax,
 			0,
 		);
-		console.log(calculatedTotalPrice === data.totalPrice);
+
 		if (calculatedTotalPrice !== data.totalPrice) {
 			ctx.addIssue({
 				code: "custom",
