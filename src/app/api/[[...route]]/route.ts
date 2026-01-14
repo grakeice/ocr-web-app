@@ -8,9 +8,12 @@ import { imageUploadSchema } from "@/schemas/imageUploadSchema";
 const app = new Hono()
 	.basePath("/api")
 	.post("/parse", zValidator("form", imageUploadSchema), async (c) => {
-		const { file } = c.req.valid("form");
+		const { file, highPrecisionMode } = c.req.valid("form");
 
-		const result = await image2ReceiptData(await file.arrayBuffer());
+		const result = await image2ReceiptData(
+			await file.arrayBuffer(),
+			highPrecisionMode,
+		);
 
 		return c.json(result);
 	});
