@@ -32,15 +32,5 @@ export async function parseReceiptData(source: string) {
 
 	const data = JSON.parse(response.text) as z.infer<typeof receiptSchema>;
 
-	// const data = (await (
-	// 	await fetch("https://localhost:3000/response_gemini.json")
-	// ).json()) as z.infer<typeof receiptSchema>;
-	// await setTimeout(1000);
-
-	// writeFileSync(
-	// 	path.join(process.cwd(), "public", "response_gemini.json"),
-	// 	JSON.stringify(data),
-	// );
-
 	return data;
 }
