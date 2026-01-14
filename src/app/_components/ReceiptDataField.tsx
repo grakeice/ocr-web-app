@@ -35,6 +35,7 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import { useNumericInput } from "@/hooks/useNumericInput";
 import { receiptSchema } from "@/schemas/receiptSchema";
 
 import { ReceiptForm } from "./ReceiptForm";
@@ -225,66 +226,91 @@ export function ReceiptDataField({ data }: ReceiptDataFieldProps): JSX.Element {
 						<Controller
 							name={"consumptionTax"}
 							control={form.control}
-							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel htmlFor={field.name}>
-										消費税額
-									</FieldLabel>
-									<InputGroup>
-										<InputGroupAddon align={"inline-start"}>
-											<BadgePercentIcon />
-										</InputGroupAddon>
-										<InputGroupInput
-											{...field}
-											type={"number"}
-											id={field.name}
-											aria-invalid={fieldState.invalid}
-											placeholder={"---"}
-											autoComplete={"off"}
-										/>
-										<InputGroupAddon align={"inline-end"}>
-											<span>円</span>
-										</InputGroupAddon>
-									</InputGroup>
-									{fieldState.invalid && (
-										<FieldError
-											errors={[fieldState.error]}
-										/>
-									)}
-								</Field>
-							)}
+							render={({ field, fieldState }) => {
+								const inputProps = useNumericInput({
+									field,
+								});
+								return (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>
+											消費税額
+										</FieldLabel>
+										<InputGroup>
+											<InputGroupAddon
+												align={"inline-start"}
+											>
+												<BadgePercentIcon />
+											</InputGroupAddon>
+											<InputGroupInput
+												{...field}
+												{...inputProps}
+												type={"text"}
+												id={field.name}
+												aria-invalid={
+													fieldState.invalid
+												}
+												placeholder={"---"}
+												autoComplete={"off"}
+											/>
+											<InputGroupAddon
+												align={"inline-end"}
+											>
+												<span>円</span>
+											</InputGroupAddon>
+										</InputGroup>
+										{fieldState.invalid && (
+											<FieldError
+												errors={[fieldState.error]}
+											/>
+										)}
+									</Field>
+								);
+							}}
 						/>
 						<Controller
 							name={"totalPrice"}
 							control={form.control}
-							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel htmlFor={field.name}>
-										総額
-									</FieldLabel>
-									<InputGroup>
-										<InputGroupAddon align={"inline-start"}>
-											<ReceiptJapaneseYenIcon />
-										</InputGroupAddon>
-										<InputGroupInput
-											{...field}
-											type={"number"}
-											id={field.name}
-											aria-invalid={fieldState.invalid}
-											placeholder={"---"}
-											autoComplete={"off"}
-										/>
-										<InputGroupAddon align={"inline-end"}>
-											<span>円</span>
-										</InputGroupAddon>
-									</InputGroup>
-									{fieldState.invalid && (
-										<FieldError
-											errors={[fieldState.error]}
-										/>
-									)}
-								</Field>
-							)}
+							render={({ field, fieldState }) => {
+								const inputProps = useNumericInput({
+									field,
+									allowDecimals: false,
+								});
+								return (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>
+											総額
+										</FieldLabel>
+										<InputGroup>
+											<InputGroupAddon
+												align={"inline-start"}
+											>
+												<ReceiptJapaneseYenIcon />
+											</InputGroupAddon>
+											<InputGroupInput
+												{...field}
+												{...inputProps}
+												type={"text"}
+												id={field.name}
+												aria-invalid={
+													fieldState.invalid
+												}
+												placeholder={"---"}
+												autoComplete={"off"}
+											/>
+											<InputGroupAddon
+												align={"inline-end"}
+											>
+												<span>円</span>
+											</InputGroupAddon>
+										</InputGroup>
+										{fieldState.invalid && (
+											<FieldError
+												errors={[fieldState.error]}
+											/>
+										)}
+									</Field>
+								);
+							}}
 						/>
 					</FieldGroup>
 					<hr className={"my-3"} />

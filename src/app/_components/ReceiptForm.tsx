@@ -41,6 +41,7 @@ import {
 	PopoverTitle,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { useNumericInput } from "@/hooks/useNumericInput";
 import {
 	ConsumptionTaxClassification,
 	receiptSchema,
@@ -142,38 +143,44 @@ export function ReceiptForm({
 							<Controller
 								name={`items.${index}.price`}
 								control={control}
-								render={({ field, fieldState }) => (
-									<Field
-										className={"flex-5"}
-										data-invalid={fieldState.invalid}
-									>
-										<FieldLabel htmlFor={field.name}>
-											一個あたりの値段（税抜）
-										</FieldLabel>
-										<InputGroup>
-											<InputGroupAddon
-												align={"inline-start"}
-											>
-												<BadgeJapaneseYenIcon />
-											</InputGroupAddon>
-											<InputGroupInput
-												{...field}
-												id={field.name}
-												aria-invalid={
-													fieldState.invalid
-												}
-												type={"number"}
-												placeholder={"---"}
-												autoComplete={"off"}
-											/>
-											<InputGroupAddon
-												align={"inline-end"}
-											>
-												<span>円</span>
-											</InputGroupAddon>
-										</InputGroup>
-									</Field>
-								)}
+								render={({ field, fieldState }) => {
+									const inputProps = useNumericInput({
+										field,
+									});
+									return (
+										<Field
+											className={"flex-5"}
+											data-invalid={fieldState.invalid}
+										>
+											<FieldLabel htmlFor={field.name}>
+												一個あたりの値段（税抜）
+											</FieldLabel>
+											<InputGroup>
+												<InputGroupAddon
+													align={"inline-start"}
+												>
+													<BadgeJapaneseYenIcon />
+												</InputGroupAddon>
+												<InputGroupInput
+													{...field}
+													{...inputProps}
+													id={field.name}
+													aria-invalid={
+														fieldState.invalid
+													}
+													type={"text"}
+													placeholder={"---"}
+													autoComplete={"off"}
+												/>
+												<InputGroupAddon
+													align={"inline-end"}
+												>
+													<span>円</span>
+												</InputGroupAddon>
+											</InputGroup>
+										</Field>
+									);
+								}}
 							/>
 							<div>
 								<XIcon
@@ -229,33 +236,45 @@ export function ReceiptForm({
 						<Controller
 							name={`items.${index}.discount`}
 							control={control}
-							render={({ field, fieldState }) => (
-								<Field data-invalid={fieldState.invalid}>
-									<FieldLabel htmlFor={field.name}>
-										値引き額
-									</FieldLabel>
-									<InputGroup>
-										<InputGroupAddon align={"inline-start"}>
-											値引き
-										</InputGroupAddon>
-										<InputGroupInput
-											{...field}
-											id={field.name}
-											aria-invalid={fieldState.invalid}
-											type={"number"}
-											placeholder={"---"}
-										/>
-										<InputGroupAddon align={"inline-end"}>
-											<span>円</span>
-										</InputGroupAddon>
-									</InputGroup>
-									{fieldState.invalid && (
-										<FieldError
-											errors={[fieldState.error]}
-										/>
-									)}
-								</Field>
-							)}
+							render={({ field, fieldState }) => {
+								const inputProps = useNumericInput({
+									field,
+								});
+								return (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor={field.name}>
+											値引き額
+										</FieldLabel>
+										<InputGroup>
+											<InputGroupAddon
+												align={"inline-start"}
+											>
+												値引き
+											</InputGroupAddon>
+											<InputGroupInput
+												{...field}
+												{...inputProps}
+												id={field.name}
+												aria-invalid={
+													fieldState.invalid
+												}
+												type={"text"}
+												placeholder={"---"}
+											/>
+											<InputGroupAddon
+												align={"inline-end"}
+											>
+												<span>円</span>
+											</InputGroupAddon>
+										</InputGroup>
+										{fieldState.invalid && (
+											<FieldError
+												errors={[fieldState.error]}
+											/>
+										)}
+									</Field>
+								);
+							}}
 						/>
 					</Field>
 					<div className={"-my-4 flex items-center justify-center"}>
@@ -337,37 +356,43 @@ export function ReceiptForm({
 							<Controller
 								name={`items.${index}.consumptionTax.price`}
 								control={control}
-								render={({ field, fieldState }) => (
-									<Field
-										data-invalid={fieldState.invalid}
-										className={"flex-2"}
-									>
-										<FieldLabel htmlFor={field.name}>
-											税額
-										</FieldLabel>
-										<InputGroup>
-											<InputGroupAddon
-												align={"inline-start"}
-											>
-												<BadgePercentIcon />
-											</InputGroupAddon>
-											<InputGroupInput
-												{...field}
-												id={field.name}
-												aria-invalid={
-													fieldState.invalid
-												}
-												type={"number"}
-												placeholder={"---"}
-											/>
-											<InputGroupAddon
-												align={"inline-end"}
-											>
-												円
-											</InputGroupAddon>
-										</InputGroup>
-									</Field>
-								)}
+								render={({ field, fieldState }) => {
+									const inputProps = useNumericInput({
+										field,
+									});
+									return (
+										<Field
+											data-invalid={fieldState.invalid}
+											className={"flex-2"}
+										>
+											<FieldLabel htmlFor={field.name}>
+												税額
+											</FieldLabel>
+											<InputGroup>
+												<InputGroupAddon
+													align={"inline-start"}
+												>
+													<BadgePercentIcon />
+												</InputGroupAddon>
+												<InputGroupInput
+													{...field}
+													{...inputProps}
+													id={field.name}
+													aria-invalid={
+														fieldState.invalid
+													}
+													type={"text"}
+													placeholder={"---"}
+												/>
+												<InputGroupAddon
+													align={"inline-end"}
+												>
+													円
+												</InputGroupAddon>
+											</InputGroup>
+										</Field>
+									);
+								}}
 							/>
 						</div>
 						{errors.items?.[index]?.consumptionTax && (
@@ -386,34 +411,42 @@ export function ReceiptForm({
 					<Controller
 						name={`items.${index}.totalPriceWithTax`}
 						control={control}
-						render={({ field, fieldState }) => (
-							<Field
-								className={"-mt-4"}
-								data-invalid={fieldState.invalid}
-							>
-								<FieldLabel htmlFor={field.name}>
-									小計（税込）
-								</FieldLabel>
-								<InputGroup>
-									<InputGroupAddon align={"inline-start"}>
-										<BadgeJapaneseYenIcon />
-									</InputGroupAddon>
-									<InputGroupInput
-										{...field}
-										id={field.name}
-										aria-invalid={fieldState.invalid}
-										type={"number"}
-										placeholder={"---"}
-									/>
-									<InputGroupAddon align={"inline-end"}>
-										<span>円</span>
-									</InputGroupAddon>
-								</InputGroup>
-								{fieldState.invalid && (
-									<FieldError errors={[fieldState.error]} />
-								)}
-							</Field>
-						)}
+						render={({ field, fieldState }) => {
+							const inputProps = useNumericInput({
+								field,
+							});
+							return (
+								<Field
+									className={"-mt-4"}
+									data-invalid={fieldState.invalid}
+								>
+									<FieldLabel htmlFor={field.name}>
+										小計（税込）
+									</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon align={"inline-start"}>
+											<BadgeJapaneseYenIcon />
+										</InputGroupAddon>
+										<InputGroupInput
+											{...field}
+											{...inputProps}
+											id={field.name}
+											aria-invalid={fieldState.invalid}
+											type={"text"}
+											placeholder={"---"}
+										/>
+										<InputGroupAddon align={"inline-end"}>
+											<span>円</span>
+										</InputGroupAddon>
+									</InputGroup>
+									{fieldState.invalid && (
+										<FieldError
+											errors={[fieldState.error]}
+										/>
+									)}
+								</Field>
+							);
+						}}
 					/>
 				</FieldGroup>
 			</CardContent>
