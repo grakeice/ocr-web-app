@@ -31,8 +31,9 @@ export function ImageInput({
 	ref,
 	multiple,
 	onChange,
+	accept = "image/jpeg, image/png",
 	...props
-}: ImageInputProps & ComponentProps<"input">): JSX.Element {
+}: ImageInputProps & Omit<ComponentProps<"input">, "type">): JSX.Element {
 	const [isDraggedOver, setIsDraggedOver] = useState(false);
 	const refInner = useRef<HTMLInputElement>(null);
 	const fileInputRef = (ref ??
@@ -49,6 +50,7 @@ export function ImageInput({
 				</InputGroupAddon>
 				<InputGroupInput
 					{...props}
+					type={"file"}
 					onChange={async (e) => {
 						onChange?.(e);
 						const inputtedFiles = e.currentTarget.files;
@@ -69,7 +71,7 @@ export function ImageInput({
 					}}
 					ref={fileInputRef}
 					id={_id}
-					accept={"image/jpeg, image/png"}
+					accept={accept}
 				/>
 			</InputGroup>
 			<AnimatePresence>
@@ -98,9 +100,7 @@ export function ImageInput({
 								e.preventDefault();
 								if (
 									fileItems.some((item) =>
-										item.type.match(
-											/(image\/jpeg|image\/png)/,
-										),
+										accept.includes(item.type),
 									) &&
 									((!multiple && fileItems.length === 1) ||
 										multiple) // 複数選択可能かもしくは複数選択不可かつファイル数が1

@@ -42,8 +42,8 @@ export default function Page(): JSX.Element {
 		<div className={"mx-auto mt-4 max-w-100 px-2"}>
 			<div className={"flex flex-col gap-4"}>
 				<ImageInput
-					type={"file"}
 					name={"image"}
+					accept={"image/jpeg, image/png, image/webp"}
 					onChange={async (e) => {
 						const inputtedFiles = e.currentTarget.files;
 						if (!inputtedFiles) return;

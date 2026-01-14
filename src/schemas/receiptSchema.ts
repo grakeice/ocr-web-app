@@ -59,7 +59,7 @@ export const receiptSchema = z
 			.number()
 			.min(0)
 			.int()
-			.describe("レシートや領収書に記載された合計金額(税込、非負整数)"),
+			.describe("レシートに記載された合計金額(税込、非負整数)"),
 	})
 	.superRefine((data, ctx) => {
 		const calculatedTotalPrice = data.items.reduce(
