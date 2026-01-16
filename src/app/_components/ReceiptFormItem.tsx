@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState, type JSX } from "react";
+import { useState, type JSX } from "react";
 
 import clsx from "clsx";
 import {
@@ -47,19 +47,18 @@ import {
 	receiptSchema,
 } from "@/schemas/receiptSchema";
 
-interface ReceiptFormProps {
+interface ReceiptFormItemProps {
 	index: number;
 	control: Control<z.infer<typeof receiptSchema>>;
 	onRemove: (index: number) => void;
 	isFormDisabled: boolean;
-	setIsFormDisabled: Dispatch<SetStateAction<boolean>>;
 }
 export function ReceiptFormItem({
 	index,
 	control,
 	onRemove,
 	isFormDisabled,
-}: ReceiptFormProps): JSX.Element {
+}: ReceiptFormItemProps): JSX.Element {
 	const { errors } = useFormState({ control });
 	const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
 

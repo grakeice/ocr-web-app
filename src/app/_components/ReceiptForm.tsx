@@ -371,7 +371,6 @@ export function ReceiptForm({ data }: ReceiptDataFieldProps): JSX.Element {
 							control={form.control}
 							onRemove={remove}
 							isFormDisabled={isFormDisabled}
-							setIsFormDisabled={setIsFormDisabled}
 						/>
 					))}
 					<div className={"flex flex-row gap-2"}>

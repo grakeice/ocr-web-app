@@ -3,6 +3,7 @@
 import {
 	useEffect,
 	useEffectEvent,
+	useMemo,
 	useRef,
 	useState,
 	type JSX,
@@ -16,7 +17,7 @@ interface RealtimeOCRProps {
 }
 
 export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
-	const scheduler = useRef(createScheduler());
+	const scheduler = useMemo(() => createScheduler(), []);
 	const isPending = useRef(true);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [text, setText] = useState("");
@@ -37,7 +38,7 @@ export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 					source.current.videoWidth,
 					source.current.videoHeight,
 				);
-			const { data } = await scheduler.current.addJob(
+			const { data } = await scheduler.addJob(
 				"recognize",
 				source.current,
 			);
@@ -46,8 +47,6 @@ export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 	});
 
 	useEffect(() => {
-		const _scheduler = scheduler.current;
-
 		const canvas = document.createElement("canvas");
 		canvasRef.current = canvas;
 
@@ -63,7 +62,7 @@ export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 					preserve_interword_spaces: "1",
 				});
 				console.log("worker added");
-				_scheduler.addWorker(worker);
+				scheduler.addWorker(worker);
 			}
 
 			isPending.current = false;
@@ -76,10 +75,10 @@ export function RealtimeOCR({ source }: RealtimeOCRProps): JSX.Element {
 				clearInterval(timer);
 				isPending.current = true;
 				canvasRef.current = null;
-				await _scheduler.terminate();
+				await scheduler.terminate();
 			})();
 		};
-	}, []);
+	}, [scheduler]);
 
 	return (
 		<div>
